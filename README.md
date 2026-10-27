@@ -58,7 +58,7 @@ python3 /path/to/codex-pi/codex_pi.py --root . verify --timeout 60 -- python3 -m
 
 - `notes save/read`: 최신 메모와 revision 이력
 - `handoff prepare/list/read/consume`: `/new` 전후의 명시적 인계
-- `sessions list/search/read/register`: 본인 로컬 Codex 대화·도구 원문. 요약하지 않으며 reasoning·불투명 payload·인증 메타데이터는 제외. 원문 도구 출력 자체에는 민감정보가 있을 수 있으므로 외부로 보내지 마세요. 기본 출력에서 잘린 대목은 `--max-chars 0`과 작은 `--limit`으로 다시 읽습니다.
+- `sessions list/search/read/register`: 본인 로컬 Codex `.jsonl` 대화·도구 원문. `--dir`로 조회 범위를 지정할 수 있습니다. 요약하지 않으며 reasoning·불투명 payload·인증 메타데이터는 제외. 원문 도구 출력 자체에는 민감정보가 있을 수 있으므로 외부로 보내지 마세요. 기본 출력에서 잘린 대목은 `--max-chars 0`과 작은 `--limit`으로 다시 읽습니다.
 - `ticket open/trial/resolve/read/list`: 티켓 하나당 Markdown 하나. 문제·결정·시도·관측 결과·검증 근거를 누적
 - `verify`: 명령 한 번 실행, 제한시간·종료코드·출력·실행 전후 상태 기록. **명령 성공과 요구사항 충족은 별개**이며 전체 Git 상태 해시는 모델 품질 검증이 아닙니다.
 
@@ -82,4 +82,6 @@ git clone https://github.com/beefiker/superloopy.git
 python3 -m unittest discover -s tests -v
 ```
 
-가상 기록·임시 폴더 테스트와 실제 Codex 실행 검증은 구분합니다. 테스트 통과가 Cofa에서의 승인·기록 수집 호환성을 증명하지는 않습니다.
+현재 단위·회귀 테스트 53개가 통과했습니다. 로컬 Git clone → 개인 설정·스킬·이력 없는 프로필 설치 → 실제 Codex 0.164.0 / gpt-6.1-sol의 두 대화에서 체크포인트 저장과 `이어가` 복원을 확인했습니다. 첫 대화에서 보류한 파일 작업을 두 번째 대화가 수행했고, 다른 세션 ID로 인계가 소비됐습니다. 훅은 native 신뢰 UI에서 검토 후 활성화했으며 테스트 인증 사본은 제거했습니다.
+
+이 실모델 시험은 작은 임계치를 사용한 두 `codex exec` 대화입니다. TUI의 `/new`와 상태바 표시는 별도로 확인했지만, 문자 그대로의 TUI `/new` 전후 인계 전체를 시험한 것은 아닙니다. 512K 길이의 실부하·모델 품질·Cofa 현장의 승인/기록 수집 호환성은 검증하지 않았습니다.
