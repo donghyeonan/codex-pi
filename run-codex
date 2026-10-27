@@ -1,0 +1,4 @@
+#!/bin/sh
+# Native Codex UI; only cosmetic footer fields are overridden for this launch.
+# Keep inherited auth, model, provider, approvals, hooks, environment and cwd.
+exec codex -c 'tui.status_line=["context-remaining","context-window-size","model-with-reasoning"]' "$@"

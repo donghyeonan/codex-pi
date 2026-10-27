@@ -1,0 +1,10 @@
+.codex-pi/
+.superloopy/
+.codex/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+auth.json
+*.log
