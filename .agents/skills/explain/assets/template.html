@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제목</title>
+<style>
+:root{
+  --bg:#FFFFFF; --ink:#212529; --slate:#495057; --muted:#868E96;
+  --line:#DEE2E6; --line-soft:#E9ECEF; --surface:#F8F9FA;
+  --mint:#12B886; --mint-accent:#20C997; --red:#F03E3E; --amber:#F59F00;
+  --sans:-apple-system, system-ui, "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Helvetica Neue",sans-serif;
+  --mono:"Fira Mono", source-code-pro, Menlo, Monaco, Consolas,"Courier New",monospace;
+  --w:768px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.7; letter-spacing:-0.004em;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--w); margin:0 auto; padding:64px 24px 120px}
+
+/* header */
+h1{font-size:36px; font-weight:800; line-height:1.5; margin:0 0 24px}
+.meta{font-size:13px; color:var(--muted); margin:0 0 16px}
+.tags{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 32px; padding:0; list-style:none}
+.tags li{background:var(--surface); color:var(--mint); font-size:13px; padding:4px 12px; border-radius:12px}
+.lead{font-size:18px; color:var(--slate); margin:0 0 48px}
+
+/* headings */
+h2{font-size:28px; font-weight:700; line-height:1.5; margin:64px 0 16px}
+h3{font-size:20px; font-weight:700; line-height:1.5; margin:32px 0 12px}
+h4{font-size:18px; font-weight:600; line-height:1.5; margin:24px 0 12px}
+p{margin:16px 0}
+ul,ol{margin:16px 0; padding-left:22px}
+li{margin:6px 0}
+strong{font-weight:700}
+mark{background:rgba(32,201,151,.18); padding:0 2px}
+a{color:var(--mint); text-decoration:none}
+a:hover{text-decoration:underline}
+hr{height:1px; border:0; background:var(--line); margin:48px 0}
+
+/* quote / callout */
+blockquote{
+  margin:32px 0; padding:16px 16px 16px 32px;
+  background:var(--surface); border-left:4px solid var(--mint-accent);
+  border-radius:0 4px 4px 0; color:var(--ink);
+}
+blockquote > :first-child{margin-top:0} blockquote > :last-child{margin-bottom:0}
+blockquote.warn{border-left-color:var(--amber)}
+blockquote.danger{border-left-color:var(--red)}
+
+/* figure */
+figure{margin:48px 0}
+figure img,figure svg,figure canvas{display:block; width:100%; max-width:100%; height:auto; border-radius:4px}
+figcaption{margin-top:12px; font-size:13px; color:var(--muted); text-align:center; line-height:1.6}
+
+/* table */
+.table-scroll{overflow-x:auto; margin:32px 0}
+table{width:100%; border-collapse:collapse; font-size:14px}
+th{background:var(--surface); color:var(--slate); font-weight:600; text-align:left;
+   padding:12px 14px; border-bottom:1px solid var(--line)}
+td{padding:12px 14px; border-bottom:1px solid var(--line-soft)}
+td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+
+/* code */
+pre{background:var(--surface); border-radius:4px; padding:16px; margin:24px 0; overflow-x:auto}
+pre code{font-family:var(--mono); font-size:14px; line-height:1.6; color:var(--ink)}
+code{font-family:var(--mono); font-size:.94em; background:var(--surface);
+     color:var(--mint); padding:2px 5px; border-radius:3px}
+pre code{background:none; color:var(--ink); padding:0}
+
+/* toc */
+.toc{background:var(--surface); border-radius:4px; padding:20px 24px; margin:32px 0}
+.toc ol{margin:0; padding-left:18px}
+.toc a{color:var(--slate); font-size:15px}
+.toc a:hover{color:var(--mint)}
+
+/* refs */
+.refs{font-size:13px; color:var(--muted)}
+.refs a{color:var(--muted); text-decoration:underline}
+
+@media (max-width:768px){
+  .wrap{padding:40px 16px 80px}
+  h1{font-size:28px} h2{font-size:24px} h3{font-size:19px}
+  .lead{font-size:17px} figure{margin:32px 0}
+}
+@media print{
+  body{print-color-adjust:exact; -webkit-print-color-adjust:exact}
+  .wrap{padding:0}
+  a{color:var(--ink); text-decoration:none}
+  figure,table,blockquote{break-inside:avoid}
+  h2{break-after:avoid}
+}
+
+/* components */
+.src{border-top:1px solid var(--line); padding-top:8px; margin-top:40px}
+.src h3{margin-top:12px}
+.chip{display:inline-block; font-size:12px; font-weight:700; color:var(--slate); background:var(--surface);
+  border:1px solid var(--line); border-radius:10px; padding:1px 9px; margin-right:6px}
+.chip.mint{color:#0b7a5a; border-color:#b2f2dd}
+.chip.violet{color:#5f3dc4; border-color:#d0bfff}
+.chip.amber{color:#9c5d00; border-color:#ffe0a3}
+.source-passage{border-left:3px solid var(--line); padding:2px 0 2px 18px; margin:16px 0}
+.source-passage p{margin:10px 0}
+.reading-help{background:var(--surface); border-left:3px solid var(--mint-accent); padding:14px 18px; margin:24px 0; border-radius:0 4px 4px 0}
+.reading-help h4{margin:0 0 6px; font-size:14px; color:var(--slate)}
+.reading-help p{margin:8px 0}
+.narration p{margin:18px 0}
+.narration h3{margin-top:40px}
+.cite{font-size:13px}
+.note{font-size:13px; color:var(--muted)}
+details{margin:16px 0}
+summary{cursor:pointer; color:var(--slate); font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>제목</h1>
+  <p class="meta">출처·작성 정보 · 날짜</p>
+  <ul class="tags"><li>태그</li></ul>
+  <p class="lead">무엇을 함께 읽고 어떤 질문에 답할지.</p>
+</header>
+<p class="note">범위·한계는 여기서 한 번.</p>
+
+<nav class="toc" aria-label="목차"><ol>
+  <li><a href="#s1">섹션</a></li>
+  <li><a href="#ai">해설</a></li>
+  <li><a href="#refs">출처</a></li>
+</ol></nav>
+
+<section id="s1">
+<h2>1. 섹션</h2>
+
+<!-- ① 원문 블록: 원문은 문단째 본문 크기로. chip 색은 출처 성격별로 하나씩 정해 쓴다 -->
+<div class="src" id="a1">
+  <h3>A1. 원문 제목 — 저자</h3>
+  <p class="meta"><span class="chip mint">유형</span>매체 · 날짜 · 위치(쪽/절/타임스탬프) · <a href="https://example.com">example.com/…</a></p>
+  <div class="source-passage">
+    <p>원문 문단 그대로.</p>
+    <p class="note">[중략: 생략한 내용]</p>
+    <p>원문 문단 그대로.</p>
+  </div>
+  <!-- 외국어 원문: 번역을 본문에, 원문은 접어서 -->
+  <details><summary>원문(English)</summary><div class="source-passage"><p>Original paragraph.</p></div></details>
+
+  <!-- ③ 그림: 원본 우선, data URI 내장. 새로 만든 도식은 캡션에 'AI 보충 도식' -->
+  <figure>
+    <img src="data:image/png;base64,..." alt="그림 내용을 설명하는 문장">
+    <figcaption>원문 이미지: 무엇을 보면 되는지. 출처: A1.</figcaption>
+  </figure>
+
+  <!-- ② 독해 도움: 지금 대목 이해에 필요한 것만 -->
+  <aside class="reading-help" aria-label="독해 도움 — AI 보충">
+    <h4>독해 도움 — AI 보충</h4>
+    <p>용어 풀이, 빠진 기초 단계, 앞뒤 연결.</p>
+  </aside>
+</div>
+</section>
+
+<!-- ④ 내레이션: 영상으로 설명하듯 소리 내어 읽히는 문장. 소제목은 내용 제목 -->
+<section id="ai" class="narration">
+<h2>AI의 해설</h2>
+<p class="note">앞의 원문을 근거로 AI가 쓴 해설입니다.</p>
+<h3>내용을 말하는 소제목</h3>
+<p>먼저 기본부터 짚겠습니다. … 출처가 여럿이면 근거를 <a class="cite" href="#a1">(A1)</a>처럼 붙입니다.</p>
+</section>
+
+<h2 id="refs">출처</h2>
+<ul class="refs">
+  <li>A1 저자, 「제목」, 매체, 날짜 — https://example.com</li>
+</ul>
+
+</div>
+</body>
+</html>

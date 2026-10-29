@@ -1,87 +1,69 @@
 # codex-pi
 
-제공된 **Codex CLI를 그대로** 사용하는 로컬 작업 기록 도구. Python 3.10+ 표준 라이브러리만 사용합니다. 별도 모델·API 키·서버·데이터베이스가 없습니다. 자동 새 대화 대신 사용자가 `/new` → `이어가`로 전환합니다.
+제공된 Codex CLI에 얹는 작은 스킬 묶음입니다. 코드·훅·서버 없이 Markdown 스킬과 AGENTS.md 몇 줄뿐입니다. clone해서 복사하면 끝이고 Codex 설정·인증·모델은 그대로입니다.
 
 ## 설치
 
-저장소를 clone한 뒤 작업 폴더에서 실행합니다. 아래 `0.8`은 **선택 가능한 예시 운영값**이지 모델 성능 보장선이 아닙니다.
+작업 폴더(프로젝트 루트)에서:
 
 ```sh
-python3 /path/to/codex-pi/setup_workspace.py --root . --ratio 0.8 --window-cap 512000
+git clone --depth 1 https://github.com/donghyeonan/codex-pi /tmp/codex-pi && cp -R /tmp/codex-pi/.agents . && cat /tmp/codex-pi/AGENTS.block.md >> AGENTS.md
 ```
 
-설치 범위는 해당 작업 폴더뿐입니다.
+그다음 평소처럼 `codex`를 실행합니다. 설정·옵션 변경은 없습니다. 업데이트 안내가 뜨면 **Skip**을 고릅니다.
 
-- `.agents/skills/`: codex-pi, grill-me, grilling
-- `.codex/hooks.json`: SessionStart/Stop 훅 추가; 기존 훅 유지
-- `AGENTS.md`: 기존 내용 유지, 진입 지침 3줄 추가
-- `.codex-pi/`: 설정·기록·설치 전 백업. Git에서 제외됨
+## 무엇이 들어 있나
 
-기존 Codex를 이 작업 폴더에서 열어 프로젝트 신뢰 여부를 확인하고 **`/hooks`에서 두 훅을 검토·신뢰**하세요. clone만으로 설치·훅 신뢰가 자동 완료되지는 않습니다. 플랫폼이 프로젝트 훅을 금지하면 설치하지 마세요. 관리 설정·인증·모델·감독 프로세스를 바꾸거나 신뢰 확인을 우회하지 않습니다. 현재 CLI 0.164.0 문서/프로토콜을 대상으로 하며 다른 버전과 Cofa 현장 호환성은 별도 확인이 필요합니다.
+| 스킬 | 쓰는 때 |
+|---|---|
+| `ponytail` | 항상(AGENTS.md). 가장 작은 완전한 변경 |
+| `ponytail-review` | 제출 전 점검, 과설계 포함 |
+| `checkpoint` | "메모 저장", "이어가 [주제]", 중요한 결정·실패·검증 |
+| `peers` | 다른 터미널의 Codex 세션이 뭘 하는지 볼 때 |
+| `ticket` | 여러 번 시도할 문제를 티켓 하나당 파일 하나로 기록 |
+| `review` | "검토 에이전트 써"라고 할 때만 읽기 전용 서브에이전트 1개 |
+| `explain` | 완성 후, 후속 질문 관점으로 결과물을 설명하는 HTML + MD |
+| `grilling` | 계획을 질문 라운드로 다듬을 때 |
 
-상태바는 `/statusline`에서 `context-remaining`, `context-window-size`를 고르거나 다음 실행 파일을 사용합니다.
-
-```sh
-/path/to/codex-pi/run-codex
-```
-
-이는 같은 `codex` 명령에 상태바 표시 옵션만 추가합니다. 실제 모델 용량 기준 표시이며 아래 운영 상한과는 다릅니다. 이미 실행 중인 대화의 표시 설정을 강제로 바꾸지 않습니다.
-
-## 컨텍스트
-
-중요한 결정·실패·검증 결과에는 상한 전이라도 메모를 저장합니다. **저장했다는 이유만으로 전환을 권하지 않습니다.**
-
-전환 기준은 `min(Codex 보고 용량, 운영 상한) × 비율`입니다. 예를 들어 512,000 상한·80%면 최대 409,600토큰에서 안내합니다. 실제 보고 용량이 486,400이면 389,120토큰에서 안내합니다. 설정은 `.codex-pi/config.json`의 `context_ratio`, `context_window_cap`; 별도 절대 임계치 `context_tokens`도 선택할 수 있습니다.
-
-Stop 훅은 마지막 요청의 `last_token_usage.total_tokens`와 `model_context_window`를 읽습니다. 누적 과금 토큰을 쓰지 않습니다. 보고 시점 이후 메시지가 추가될 수 있으므로 점유량은 근사치입니다. 정보가 없으면 unknown이며 수치를 추측하지 않습니다. 작업 턴 종료 경계에서만 검사하므로, 한 번의 긴 턴 안에서 먼저 발생하는 내장 자동 압축/초과를 막지는 못합니다.
+기록은 모두 작업 폴더의 `.codex-pi/`에 남습니다.
 
 ```text
-중요한 변화 → 메모 저장 (전환 안내 없음)
-임계치 도달 → 세션당 한 번 메모 갱신·인계 준비 요청
-저장 성공 확인 → 사용자 /new → 이어가
-새 대화 → 인계 메모 읽기 → 현재 파일 확인 → 인계 소비 → 계속
+.codex-pi/notes/<주제>-<YYMMDD-HHMM>.md   메모(매번 새 파일 = 이력)
+.codex-pi/tickets/NNN-<slug>.md            티켓
+.codex-pi/explain/index.html, index.md     설명
 ```
 
-메모 작성은 AI가 수행합니다. 훅이 직접 요약하거나 저장 성공을 보장하지 않습니다. 저장 실패 시 현재 대화를 유지하고 실패를 알립니다. 무한 재시도는 없습니다. `/new` 이후 자동 파일 주입이 아니라 지침에 따른 읽기이며, 실제 현장 동작을 먼저 확인하세요.
+## 컨텍스트 전환
 
-메모 필드: `goal`, `constraints`, `decisions`, `progress`, `next`, `references`. 이전 유효 결정을 보존하여 전체 갱신하며, 세션별 latest와 불변 history를 남깁니다. 인계는 특정 revision을 고정합니다. 준비 후 새 메모가 생기면 재준비해야 합니다. **메모에 반영하지 않은 추가 작업까지 자동으로 감지하지는 못하므로 `/new` 직전에 최신화**하세요. 여러 인계가 대기 중이면 사용자가 고릅니다.
+기본: `/status`의 `Context window: NN% left`를 보고 "메모 저장" → `/new` → "이어가". 두 세션을 쓰면 "이어가 <주제>".
 
-## 로컬 기록 도구
+선택(자동 전환): Codex에 내장된 `new_context`는 Sol 6.0·Luna 6에서만, 실험 기능을 켰을 때 나타납니다.
 
 ```sh
-python3 /path/to/codex-pi/codex_pi.py --root . --help
-python3 /path/to/codex-pi/codex_pi.py --root . handoff list
-python3 /path/to/codex-pi/codex_pi.py --root . sessions list
-python3 /path/to/codex-pi/codex_pi.py --root . ticket list
-python3 /path/to/codex-pi/codex_pi.py --root . verify --timeout 60 -- python3 -m unittest discover -s tests
+codex -c model=gpt-6-sol -c features.context_management.experimental_mode=true
 ```
 
-- `notes save/read`: 최신 메모와 revision 이력
-- `handoff prepare/list/read/consume`: `/new` 전후의 명시적 인계
-- `sessions list/search/read/register`: 본인 로컬 Codex `.jsonl` 대화·도구 원문. `--dir`로 조회 범위를 지정할 수 있습니다. 요약하지 않으며 reasoning·불투명 payload·인증 메타데이터는 제외. 원문 도구 출력 자체에는 민감정보가 있을 수 있으므로 외부로 보내지 마세요. 기본 출력에서 잘린 대목은 `--max-chars 0`과 작은 `--limit`으로 다시 읽습니다.
-- `ticket open/trial/resolve/read/list`: 티켓 하나당 Markdown 하나. 문제·결정·시도·관측 결과·검증 근거를 누적
-- `verify`: 명령 한 번 실행, 제한시간·종료코드·출력·실행 전후 상태 기록. **명령 성공과 요구사항 충족은 별개**이며 전체 Git 상태 해시는 모델 품질 검증이 아닙니다.
+켜지면 AI가 남은 컨텍스트 20% 아래에서 메모를 저장하고 스스로 새 창으로 넘어가 메모를 읽고 이어갑니다. 다만 `-c`를 붙이면 Codex가 평소의 공유 백그라운드 서버(`/status`의 `Server`) 대신 자체 내장 서버로 실행된다는 경고가 뜹니다. 시험장에서는 사전 체험 때 이 명령이 동작하는지, 써도 되는지 Cofa Helper에 확인한 뒤에만 쓰세요. 아니면 기본 방식을 씁니다.
 
-실제 기록은 `.codex-pi/`에만 둡니다. 공개 저장소에 시험 문제·대화·기록·키를 올리지 마세요. 이 도구에는 원격 업로드 기능이 없습니다.
+## 서브에이전트
 
-## grill-me / Franky 대안
-
-`grill-me`는 Matt Pocock의 원본 `grilling`을 읽는 짧은 Codex 어댑터입니다. 원본 지침과 MIT 라이선스는 보존했습니다. [출처](THIRD_PARTY.md).
-
-이 저장소를 못 가져올 때는 공개 Superloopy 저장소의 Franky 지침을 직접 읽을 수 있습니다.
-
-```sh
-git clone https://github.com/beefiker/superloopy.git
-```
-
-해당 버전의 `agents/franky.md`를 먼저 확인하세요. **Franky는 구현·증거 작성 지침**이고 Superloopy의 `begin/check/finish`는 별도 실행 코드입니다. Franky 파일만 읽는다고 검증 루프나 전용 도구가 설치되지는 않습니다. 제공 Codex에서 사용할 수 없는 도구 이름·모델 지정은 그대로 실행하라고 지시하지 마세요. 안전하고 반복 가능한 테스트 명령의 실제 결과로 검증하고, 지원하지 않는 부분을 명시하세요. 플랫폼의 외부 자료 규칙은 어느 저장소에도 동일하게 적용됩니다.
+Codex는 서브에이전트를 직접 요청하거나 AGENTS.md·스킬이 지시할 때만 띄웁니다. 이 키트는 자동 지시를 넣지 않았고, "검토 에이전트 써"라고 할 때만 `review` 스킬이 1개를 띄웁니다. 서브에이전트는 토큰을 따로 씁니다.
 
 ## 검증
 
-```sh
-python3 -m unittest discover -s tests -v
-```
+2026-10-29, Codex CLI 0.164.0. 개인 설정·스킬이 없는 임시 HOME/CODEX_HOME에 GitHub에서 clone한 키트를 위 설치 명령으로 넣고 실제 모델로 `codex exec`를 돌렸습니다.
 
-현재 단위·회귀 테스트 53개가 통과했습니다. 로컬 Git clone → 개인 설정·스킬·이력 없는 프로필 설치 → 실제 Codex 0.164.0 / gpt-6.1-sol의 두 대화에서 체크포인트 저장과 `이어가` 복원을 확인했습니다. 첫 대화에서 보류한 파일 작업을 두 번째 대화가 수행했고, 다른 세션 ID로 인계가 소비됐습니다. 훅은 native 신뢰 UI에서 검토 후 활성화했으며 테스트 인증 사본은 제거했습니다.
+| 시험 | 모델 | 결과 |
+|---|---|---|
+| "메모 저장" 후 새 세션에서 "이어가 div" | Sol 6.1 | 메모의 next(`pow2`) 수행, 테스트 통과 |
+| 다른 세션이 뭘 하는지 묻기 | Sol 6.1 | 다른 주제 메모 2개를 읽어 요약, 파일 수정 없음 |
+| 실패 테스트를 티켓으로 관리하며 수정 | Sol 6.1 | `001-*.md`에 시도 2개·검증 명령, `resolved` |
+| "검토 에이전트 써" | Sol 6.1 | `spawn_agent` 1개(`fork_turns: none`), 자식은 수정 없음 |
+| 설명 HTML 요청 | Sol 6.1 | `index.html`·`index.md` 생성, 브라우저 렌더 확인 |
+| 1단계 후 `new_context`, 2단계는 새 창에서 | Sol 6.0 + 실험 기능 | 새 창에서 이전 창 id로 메모를 찾아 2단계 완료, 테스트 통과 |
 
-이 실모델 시험은 작은 임계치를 사용한 두 `codex exec` 대화입니다. TUI의 `/new`와 상태바 표시는 별도로 확인했지만, 문자 그대로의 TUI `/new` 전후 인계 전체를 시험한 것은 아닙니다. 512K 길이의 실부하·모델 품질·Cofa 현장의 승인/기록 수집 호환성은 검증하지 않았습니다.
+실험 기능의 내장 `notes`·`history` 도구는 이 시험에서 `backend request failed`를 냈습니다. 그래서 메모는 작업 폴더 파일로 둡니다. 시험장 플랫폼에서의 동작과 기록 수집은 확인하지 못했습니다.
+
+## 출처
+
+`grilling`(Matt Pocock), `ponytail`·`ponytail-review`(DietrichGebert)는 MIT 원본을 그대로 복사했습니다. [THIRD_PARTY.md](THIRD_PARTY.md)
