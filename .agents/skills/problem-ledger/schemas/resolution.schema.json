@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gbrain://problem-hub/resolution/v1",
+  "title": "Resolution v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "type", "id", "title", "project", "ticket_id", "status", "decided_at", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "type": { "const": "resolution" },
+    "id": { "type": "string", "pattern": "^RES-[A-Z0-9]+-[0-9]{4}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "ticket_id": { "type": "string" },
+    "source_session": { "type": ["string", "null"] },
+    "source_sessions": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "status": { "enum": ["accepted", "superseded", "reverted"] },
+    "disposition": { "enum": ["resolved", "legacy"] },
+    "decided_at": { "type": "string", "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "supersedes": { "type": ["string", "null"] },
+    "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "follow_up_ticket_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

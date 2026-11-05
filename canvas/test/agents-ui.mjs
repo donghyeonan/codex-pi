@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+import {startServer} from '../server.mjs';
+const {chromium}=await import(process.argv[2]||'playwright-core');
+const root=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-agents-ui-'));
+const app=await startServer({workspace:root,port:0,backend:'codex',codexCommand:[process.execPath,new URL('./fake-codex.mjs',import.meta.url).pathname],piCommand:[process.execPath,new URL('./fake-pi.mjs',import.meta.url).pathname]});
+const browser=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
+try{
+ const page=await browser.newPage({viewport:{width:1200,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(app.url);await page.locator('#toggle-chat').click();
+ await page.locator('#prompt').fill('MIDTURN');await page.locator('#send').click();
+ await page.locator('.message.assistant').filter({hasText:'one completed reply'}).waitFor();
+ assert.equal(await page.locator('.message.live').count(),0,'completed text must not remain in the live bubble');
+ assert.equal(await page.locator('.message.assistant').count(),1);
+ await page.locator('#agent-menu > summary').click();await page.locator('#agent-engine:not([disabled])').waitFor();
+ await page.locator('#agent-engine').selectOption('pi');await page.locator('#agent-detail').filter({hasText:'Pi'}).waitFor();assert.equal(await page.locator('.message.assistant').count(),0);
+ await page.locator('#pi-questions').click();await page.locator('.approval').waitFor();assert.equal(await page.locator('.approval select').inputValue(),'');
+ await page.getByRole('button',{name:'답변 제출',exact:true}).click();assert.equal(await page.locator('.approval').count(),1);
+ await page.locator('.approval select').selectOption('B');await page.getByRole('button',{name:'답변 제출',exact:true}).click();
+ await page.locator('.message.assistant').filter({hasText:'answer:B'}).waitFor();assert.equal(await page.locator('.message.live').count(),0);
+ await page.locator('#agent-menu > summary').click();await page.locator('#agent-engine:not([disabled])').waitFor();await page.locator('#agent-engine').selectOption('codex');await page.locator('.message.assistant').filter({hasText:'one completed reply'}).waitFor();assert.equal(await page.locator('.message.assistant').count(),1);
+ await page.locator('#agent-menu > summary').click();
+ await page.locator('#new-conversation:not([disabled])').click();await page.locator('.chat-empty').waitFor();assert.equal(await page.locator('.message').count(),0);
+ await page.locator('#conversation-menu > summary').click();await page.getByRole('button',{name:'MIDTURN',exact:true}).click();await page.locator('.message.assistant').filter({hasText:'one completed reply'}).waitFor();
+ await fs.mkdir('/tmp/canvas-agent-layout',{recursive:true});await page.screenshot({path:'/tmp/canvas-agent-layout/desktop.png'});
+ await page.setViewportSize({width:390,height:844});await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.screenshot({path:'/tmp/canvas-agent-layout/mobile.png'});
+ const bounds=await page.locator('#chat').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=390);assert.equal(await page.locator('.chat-hint').count(),0);
+ await page.goto(app.url);await page.waitForURL(app.origin+'/');await page.locator('#agent-engine').waitFor({state:'attached'});
+ await page.locator('#toggle-chat').click();await page.locator('#agent-menu > summary').click();await page.locator('#agent-engine').selectOption('pi');await page.locator('#pi-questions').waitFor();await page.locator('#agent-menu > summary').click();await page.locator('#toggle-chat').click();
+ await page.locator('#prompt').fill('/q');await page.locator('#send').click();await page.locator('.approval').waitFor();const approval=await page.locator('.approval').boundingBox();assert.ok(approval.height>40&&approval.y>=0&&approval.y+approval.height<=844,'collapsed composer keeps the question visible');await page.getByRole('button',{name:'취소',exact:true}).click();
+ assert.deepEqual(errors,[]);console.log('PASS browser: no completed/live overlap, Pi/Codex selection, explicit Pi question answer, Codex history restored');
+}finally{await browser.close();await app.close();await fs.rm(root,{recursive:true,force:true})}

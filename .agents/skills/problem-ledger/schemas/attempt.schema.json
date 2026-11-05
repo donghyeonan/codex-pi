@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gbrain://problem-hub/attempt/v1",
+  "title": "Attempt v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "type", "id", "title", "project", "ticket_id", "status", "outcome", "sequence", "started_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "type": { "const": "attempt" },
+    "id": { "type": "string", "pattern": "^ATT-[A-Z0-9]+-[0-9]{4}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "ticket_id": { "type": "string" },
+    "source_session": { "type": ["string", "null"] },
+    "source_sessions": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "status": { "enum": ["running", "completed"] },
+    "outcome": { "enum": ["running", "succeeded", "failed", "inconclusive", "abandoned"] },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "ended_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

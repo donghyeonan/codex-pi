@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gbrain://problem-hub/evidence/v1",
+  "title": "Evidence v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "type", "id", "title", "project", "status", "kind", "supports", "locator", "captured_at", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "type": { "const": "evidence" },
+    "id": { "type": "string", "pattern": "^EVD-[A-Z0-9]+-[0-9]{4}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["current", "stale", "superseded", "invalid"] },
+    "kind": { "enum": ["source", "test", "fact", "decision", "screenshot", "external"] },
+    "supports": { "type": "string", "minLength": 1 },
+    "locator": { "type": "string", "minLength": 1, "pattern": "^(?:fact:[0-9]+(?:,[0-9]+)*|repo:[A-Za-z0-9._/-]+|url:https?://\\S+)$" },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

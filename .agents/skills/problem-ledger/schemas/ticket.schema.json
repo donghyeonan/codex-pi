@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gbrain://problem-hub/ticket/v2",
+  "title": "Ticket v2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "type", "id", "number", "scope", "reported_by", "title", "project", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "type": { "const": "ticket" },
+    "id": { "type": "string", "pattern": "^[A-Z0-9]+-[A-Z0-9]+-[0-9]{3,}$" },
+    "number": { "type": "integer", "minimum": 1 },
+    "scope": { "enum": ["project", "general"] },
+    "reported_by": { "enum": ["user", "assistant", "tool"] },
+    "source_session": { "type": ["string", "null"] },
+    "source_sessions": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "title": { "type": "string", "minLength": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "parent_id": { "type": ["string", "null"] },
+    "priority": { "enum": ["p0", "p1", "p2", "p3"] },
+    "owner": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "depends_on": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "github_issue": { "type": ["string", "null"], "format": "uri" },
+    "tags": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+  }
+}

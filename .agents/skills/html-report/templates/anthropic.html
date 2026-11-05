@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제목</title>
+<style>
+:root{
+  --bg:#FAF9F5; --panel:#F0EEE6; --ink:#141413; --slate:#3D3D3A; --muted:#8A8880; --line:#E3E1D8;
+  --clay:#D97757; --green:#3AA57A; --red:#C94F6D;
+  --serif:"Iowan Old Style","Times New Roman","AppleMyungjo",serif;
+  --sans:-apple-system,"Helvetica Neue","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:Menlo,Monaco,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--sans);-webkit-font-smoothing:antialiased}
+main{max-width:1080px;margin:0 auto;padding:72px 40px 120px}
+.eye{font-size:13px;color:#6B6A65}
+h1{font-family:var(--serif);font-weight:400;font-size:52px;line-height:1.12;margin:14px 0 18px;max-width:820px}
+.lead{font-size:19px;color:var(--slate);max-width:680px;margin:0 0 56px}
+hr{border:0;border-top:1px solid var(--line);margin:0 0 8px}
+h2{font-family:var(--serif);font-weight:400;font-size:30px;margin:64px 0 8px}
+.k{font-size:18px;color:var(--slate);margin:0 0 24px;max-width:720px}  /* 절의 핵심 한 줄 */
+a{color:var(--ink);text-decoration-color:var(--clay)}
+
+/* 원본 | 해석 */
+.pair{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px}
+.raw{background:var(--panel);border-radius:14px;padding:22px 24px}
+.lab{font-size:12px;color:var(--muted);margin-bottom:10px}
+.note p{margin:0 0 14px}
+.warn{border-left:2px solid var(--clay);padding-left:12px}
+blockquote{margin:0 0 14px;font-family:var(--serif);font-size:17px}   /* 원문 인용 */
+.src-meta{font-size:12px;color:var(--muted)}
+details{font-size:14px;color:var(--slate)}
+
+/* figure / table */
+figure{margin:0 0 18px}
+figure svg,figure img{width:100%;height:auto;display:block}
+figcaption,.cap{font-size:12px;color:var(--muted);margin-top:4px}
+svg text{fill:var(--slate);font:12px var(--sans)}
+.bar{fill:var(--clay)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+code{font:12px var(--mono);background:#E8E6DC;padding:1px 4px;border-radius:3px}
+
+@media(max-width:760px){main{padding:40px 20px}h1{font-size:36px}.pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="eye">Research note · 분류</div>
+<h1>제목</h1>
+<p class="lead">무엇을 왜 보는지 한두 문장.</p>
+<hr>
+
+<section id="s1">
+  <h2>절 제목</h2>
+  <p class="k">이 절에서 원본이 보여 주는 것 한 줄.</p>
+  <div class="pair">
+    <div class="raw">
+      <div class="lab">원본</div>
+      <figure>
+        <svg viewBox="0 0 460 48" role="img" aria-label="막대 그래프">
+          <text x="112" y="15" text-anchor="end">항목 A</text><rect class="bar" x="120" y="4" width="240" height="14" rx="2"/><text x="366" y="15">120</text>
+          <text x="112" y="37" text-anchor="end">항목 B</text><rect class="bar" x="120" y="26" width="120" height="14" rx="2"/><text x="246" y="37">60</text>
+        </svg>
+        <figcaption>무엇을 셌는지 · 출처 파일/링크</figcaption>
+      </figure>
+      <blockquote>원문 대목 그대로.</blockquote>
+      <div class="src-meta">저자, 연도 · <a href="#">링크</a></div>
+    </div>
+    <div class="note">
+      <div class="lab">해석</div>
+      <p>기초 개념부터 풀어 쓴 설명. <b>핵심</b>만 굵게.</p>
+      <p class="warn">해석의 한계나 주의는 필요한 곳에 한 번.</p>
+    </div>
+  </div>
+</section>
+
+</main></body>
+</html>
