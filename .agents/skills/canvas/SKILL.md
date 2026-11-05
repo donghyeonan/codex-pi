@@ -18,7 +18,7 @@ Never fabricate data, sources or checks. Every number traces to a file/row.
 
 ## Report
 
-Follow the `html-report` skill (default Anthropic style): per section **원본** (data, charts, quoted passages, row links) | **해석** (basic explanation, what it means, uncertainty).
+Follow the `html-report` skill (one column, default Anthropic style). The reader's question is "what is in this data?": each section answers one such question in prose, with its chart, quoted passage or row link placed right after the sentence that uses it, then what it means and how sure we are.
 
 ## Canvas files
 

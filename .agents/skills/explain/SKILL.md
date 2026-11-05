@@ -1,6 +1,6 @@
 ---
 name: explain
-description: Use when explaining an implementation for a technical interview or submission ("설명 HTML", "구현 면접", "이해도 점검"). Teach the actual code, data flow, failure handling and trade-offs in a standalone HTML.
+description: Use when explaining an implementation for a technical interview or submission ("구현 면접", "면접 대비 HTML", "이해도 점검"). Teach the actual code, data flow, failure handling and trade-offs in a standalone HTML.
 ---
 
 # Explain — 구현 기술 면접 해설
