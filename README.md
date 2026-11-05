@@ -46,6 +46,7 @@ Pi에서는 전역 `canvas` 스킬을 등록한 뒤 `/reload`하여 `/skill:canv
 | `explain` | 구현 기술 면접 대비: 실제 데이터 흐름·오류 처리·설계 선택·검증을 가르치는 독립 HTML |
 | `peers` | 다른 작업의 Problem Hub 기록과 git 변경을 읽어 파일 충돌 확인 |
 | `grilling` | 계획을 질문 라운드로 다듬을 때 |
+| `humanize-korean` | "AI 티 없애줘", "번역투 고쳐": 내용·숫자·고유명사는 그대로 두고 한국어 문체만 다듬기, 검사 스크립트로 등급 확인 |
 | `html-report` | 원본·해석 두 칸 독립 HTML 보고서 (기본 Anthropic, 요청 시 velog 스타일) |
 | `canvas` | 데이터 분석: 독립 HTML 원본 분석 보고서 먼저 → 가설·질문 → 필요 시 캔버스 시각화 |
 
