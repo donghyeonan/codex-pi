@@ -44,6 +44,11 @@ pre code{font:14px/1.6 var(--mono);background:none;color:var(--ink);padding:0}
 code{font-family:var(--mono);font-size:.92em;background:var(--surface);color:var(--mint);padding:2px 5px;border-radius:3px}
 
 .note{border-left:3px solid var(--amber);padding:2px 0 2px 14px;color:var(--slate)}   /* 단서·한계 */
+.flow p{margin:0 0 10px}
+.comment{margin:28px 0;padding:16px 20px;border-left:3px solid var(--mint-accent);background:var(--surface)}
+.comment b{margin-right:6px}
+.link{display:block;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:18px 0;text-decoration:none;color:inherit}
+.link span{display:block;font-size:13px;color:var(--muted)}
 details{margin:12px 0}
 summary{cursor:pointer;color:var(--slate)}
 
@@ -52,29 +57,36 @@ summary{cursor:pointer;color:var(--slate)}
 </head>
 <body><main>
 <h1>제목</h1>
-<p class="meta">날짜 · 다룬 자료</p>
-<p class="lead">무엇을 이야기하는지 한두 문장.</p>
+<p class="meta">날짜</p>
+<p class="lead">무엇을 왜 쓰는지 두세 줄. 길면 어디부터 읽으면 되는지.</p>
 
-<section id="s1">
-  <h2>소제목</h2>
-  <p>1. 이 글에서 이야기할 것과 결론.</p>
-  <p>2. 앞 번호를 받아 이어 가는 이야기. 근거가 있으면 바로 뒤에 보여 준다.</p>
-  <figure>
-    <pre><code>근거 코드나 데이터 발췌</code></pre>
-    <figcaption>무엇을 보면 되는지 · 출처</figcaption>
-  </figure>
-  <p>3. 그래서 이 자료가 말하는 것.</p>
-  <figure>
-    <img src="data:image/png;base64,..." alt="원본 캡처가 보여 주는 내용">
-    <figcaption>원본 캡처: 무엇을 보면 되는지 · 출처</figcaption>
-  </figure>
-  <figure>
-    <blockquote><p>원문 대목 그대로. [중략]</p></blockquote>
-    <figcaption>저자, 연도 · <a href="#">링크</a></figcaption>
-  </figure>
-  <p>4. 이어지는 이야기.</p>
-  <p class="note">단서나 한계는 필요한 곳에 한 번.</p>
-</section>
+<div class="flow">
+<p>1. 큰 이야기를 먼저 던짐.</p>
+<p>2. 앞 번호를 받아 풀어 감. 처음 나온 용어는 여기서 쉬운 말로 풂.</p>
+<figure>
+  <img src="data:image/png;base64,..." alt="원본 캡처가 보여 주는 내용">
+  <figcaption>출처</figcaption>
+</figure>
+<p>3. 숫자는 구체적으로, 필요하면 직접 계산함.</p>
+<figure>
+  <svg viewBox="0 0 460 48" role="img" aria-label="막대 그래프">
+    <text x="112" y="15" text-anchor="end">항목 A</text><rect class="bar" x="120" y="4" width="240" height="14" rx="2"/><text x="366" y="15">120</text>
+    <text x="112" y="37" text-anchor="end">항목 B</text><rect class="bar" x="120" y="26" width="120" height="14" rx="2"/><text x="246" y="37">60</text>
+  </svg>
+  <figcaption>무엇을 보면 되는지 · 출처</figcaption>
+</figure>
+<p>4. 외국어 자료는 우리말로 요약한 뒤 원문을 붙임.</p>
+<figure>
+  <blockquote>Original sentence as written. [중략]</blockquote>
+  <figcaption>매체, 날짜</figcaption>
+</figure>
+<a class="link" href="#">기사·자료 제목<span>example.com</span></a>
+</div>
 
+<div class="comment"><b>한줄 코멘트.</b>여기까지의 흐름에 대한 해석 몇 문장.</div>
+
+<div class="flow">
+<p>5. 다음 흐름도 번호를 이어서 씀.</p>
+</div>
 </main></body>
 </html>

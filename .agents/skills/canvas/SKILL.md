@@ -18,7 +18,7 @@ Never fabricate data, sources or checks. Every number traces to a file/row.
 
 ## Report
 
-Follow the `html-report` skill (one column, default Anthropic style). The reader's question is "what is in this data?": each section answers one such question in prose, with its chart, quoted passage or row link placed right after the sentence that uses it, then what it means and how sure we are.
+Follow the `html-report` skill (numbered blog-style flow, default Anthropic style). The numbers state what is in the data, each chart, quoted passage or row link sits right after the number that uses it, and `한줄 코멘트.` blocks carry what it means and how sure we are.
 
 ## Canvas files
 
