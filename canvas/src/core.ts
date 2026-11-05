@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { outline, truncate } from "./context.ts";
+import { getKit, kitComponent, kitInsertOps, kitSubtree, listKits, type KitInsert } from "./kits.ts";
 import { captureScreenshot, findChrome, MAX_SIDE, targetRect } from "./screenshot.ts";
 import type { CanvasDoc, CanvasOp, DocStore } from "./store.ts";
 
@@ -66,6 +67,11 @@ export const TOOL_TEXT = {
 			"When the user asks for a screen, app or web page design rather than a report, start it with canvas_new (device preset frames) and build the layers with canvas_edit.",
 			"Before designing on the canvas, read the bundled design skills that fit the work (better-layout, better-typography, better-colors, better-ui; better-writing for copy); use better-interface for a holistic review of a finished design.",
 		],
+	},
+	canvas_kits: {
+		description: "List Pen design kits and tokens; kit gives components and both themes; kit + component gives compact node subtree JSON. kit + insert (all or exact component names/ids) inserts editable components and theme variables into the active doc. Then build screens with canvas_edit instance nodes whose ref is an inserted id.",
+		snippet: "Browse and insert real design-system components and tokens (shadcn, halo, lunaris, nitro, heroui)",
+		guidelines: ["When the user names a design system/kit (shadcn, halo, lunaris, nitro, heroui) or wants a consistent UI, call canvas_kits to list it and insert the needed components before building screens with instances; screenshot the result."],
 	},
 	canvas_screenshot: {
 		description:
@@ -141,6 +147,30 @@ export function canvasRead(h: CoreHost, params: { docId?: string; full?: boolean
 		nodes: doc.nodes.map((n) => ({ ...n, html: full ? n.html : truncate(n.html, 300), d: full ? n.d : truncate(n.d, 200) })),
 	};
 	return { content: [{ type: "text", text: JSON.stringify(view, null, full ? 0 : 1) }], details: { docId: doc.id, version: doc.version } };
+}
+
+export async function canvasKits(h: CoreHost, params: Partial<KitInsert> & { component?: string; docId?: string }): Promise<ToolResult> {
+	if (params.kit !== undefined && typeof params.kit !== "string") throw new Error("kit must be a string");
+	let result: Record<string, unknown> | ReturnType<typeof listKits>;
+	if (!params.kit) {
+		if (params.insert !== undefined || params.component !== undefined) throw new Error("kit is required for component inspection or insertion");
+		result = listKits();
+	} else if (params.insert !== undefined) {
+		if (params.component !== undefined) throw new Error("choose component inspection or insert, not both");
+		const doc = resolveDoc(h, params.docId);
+		const { ops, ...inserted } = kitInsertOps(doc, { ...params, kit: params.kit, insert: params.insert });
+		const res = h.applyOps(doc.id, ops, "agent");
+		if (!h.hasServer()) await h.show(doc.id, "canvas");
+		result = { ...inserted, docId: doc.id, version: res.doc.version };
+	} else {
+		const k = getKit(params.kit);
+		if (params.component !== undefined && typeof params.component !== "string") throw new Error("component must be a string");
+		const component = params.component ? kitComponent(k, params.component) : undefined;
+		result = component
+			? { component, nodes: kitSubtree(k, [component.id]) }
+			: { name: k.name, components: k.components, themes: k.themes, defaultTheme: k.defaultTheme, variables: k.variables, warnings: k.warnings };
+	}
+	return { content: [{ type: "text", text: JSON.stringify(result) }], details: result as ToolResult["details"] };
 }
 
 export async function canvasEdit(h: CoreHost, params: { docId?: string; ops: CanvasOp[] }): Promise<ToolResult> {

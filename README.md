@@ -7,14 +7,20 @@
 프로젝트 루트에서:
 
 ```sh
-git clone --depth 1 https://github.com/donghyeonan/codex-pi /tmp/codex-pi && cp -R /tmp/codex-pi/.agents . && cat /tmp/codex-pi/AGENTS.block.md >> AGENTS.md
+git clone --depth 1 https://github.com/donghyeonan/codex-pi ~/.local/share/codex-pi
+cp -R ~/.local/share/codex-pi/.agents .
+cat ~/.local/share/codex-pi/AGENTS.block.md >> AGENTS.md
 ```
 
 캔버스(`$canvas`)를 쓰려면:
 
 ```sh
-node /tmp/codex-pi/canvas/bin/codex-canvas.mjs install
+node ~/.local/share/codex-pi/canvas/bin/codex-canvas.mjs install
 ```
+
+Node.js 22.18 이상이 필요합니다. 설치 후 프로젝트에서 Codex를 재시작하고 `$canvas`를 입력하세요. MCP 설정이 클론 경로를 참조하므로 클론 폴더를 지우지 마세요. 원격 환경은 캔버스 포트 전달이 필요하며, 실시간 채팅은 같은 공유 app-server 데몬에서 실행 중인 Codex 세션에 연결됩니다.
+
+최신 캔버스와 117개 예시·stageshow를 포함합니다. 공개 배포본에는 Pen 키트 데이터와 재배포 제한이 있는 transitions 스킬을 넣지 않습니다. 키트가 없어도 레이어·Goodies로 디자인할 수 있습니다.
 
 ## 스킬
 

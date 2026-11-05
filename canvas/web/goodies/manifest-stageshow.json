@@ -1,0 +1,1122 @@
+[
+  {
+    "id": "stageshow-static-card",
+    "name": "Static card",
+    "category": "stageshow-scenes",
+    "file": "stageshow/static-card.html",
+    "w": 400,
+    "h": 300,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "static-card"
+    ],
+    "description": "Quiet hierarchy, a hard crop, one satellite, real words only on the selected customer, its neighbors and the total.",
+    "inspiredBy": "Stageshow · static-card (MIT)"
+  },
+  {
+    "id": "stageshow-dark-bento",
+    "name": "Dark card",
+    "category": "stageshow-scenes",
+    "file": "stageshow/dark-bento.html",
+    "w": 360,
+    "h": 280,
+    "bg": "dark",
+    "tags": [
+      "stageshow",
+      "scene",
+      "dark-bento"
+    ],
+    "description": "One signal said once; album art keeps it a music app.",
+    "inspiredBy": "Stageshow · dark-bento (MIT)"
+  },
+  {
+    "id": "stageshow-hero-demo",
+    "name": "Hero demo",
+    "category": "stageshow-scenes",
+    "file": "stageshow/hero-demo.html",
+    "w": 720,
+    "h": 340,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "hero-demo"
+    ],
+    "description": "Five beats, named targets, an annotation, a terminal coming forward.",
+    "inspiredBy": "Stageshow · hero-demo (MIT)"
+  },
+  {
+    "id": "stageshow-payout-flow",
+    "name": "Payout flow",
+    "category": "stageshow-scenes",
+    "file": "stageshow/payout-flow.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "payout-flow"
+    ],
+    "description": "Slow overlapping arrivals, reading time, a payoff that holds.",
+    "inspiredBy": "Stageshow · payout-flow (MIT)"
+  },
+  {
+    "id": "stageshow-choreography",
+    "name": "Changing markets",
+    "category": "stageshow-scenes",
+    "file": "stageshow/choreography.html",
+    "w": 640,
+    "h": 468,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "choreography"
+    ],
+    "description": "Retained tracks, soft masks, dependent timing.",
+    "inspiredBy": "Stageshow · choreography (MIT)"
+  },
+  {
+    "id": "stageshow-ai-chat",
+    "name": "AI answer",
+    "category": "stageshow-scenes",
+    "file": "stageshow/ai-chat.html",
+    "w": 640,
+    "h": 420,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "ai-chat"
+    ],
+    "description": "The question sent, Thinking, the answer streaming in with its height, sources last; no sparkles, no purple.",
+    "inspiredBy": "Stageshow · ai-chat (MIT)"
+  },
+  {
+    "id": "stageshow-ai-cards",
+    "name": "AI with cards",
+    "category": "stageshow-scenes",
+    "file": "stageshow/ai-cards.html",
+    "w": 640,
+    "h": 540,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "ai-cards"
+    ],
+    "description": "A multiple-choice card answered and kept as the record, a card of options opening in the thread, booked from its own button.",
+    "inspiredBy": "Stageshow · ai-cards (MIT)"
+  },
+  {
+    "id": "stageshow-form-error",
+    "name": "Form validation",
+    "category": "stageshow-scenes",
+    "file": "stageshow/form-error.html",
+    "w": 560,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "form-error"
+    ],
+    "description": "An error on the field that caused it, cleared by fixing it, then the button confirms on itself.",
+    "inspiredBy": "Stageshow · form-error (MIT)"
+  },
+  {
+    "id": "stageshow-reorder",
+    "name": "Drag to reorder",
+    "category": "stageshow-scenes",
+    "file": "stageshow/reorder.html",
+    "w": 520,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "reorder"
+    ],
+    "description": "A row lifted by its grip, the others making room, dropped into place.",
+    "inspiredBy": "Stageshow · reorder (MIT)"
+  },
+  {
+    "id": "stageshow-chart-scrub",
+    "name": "Chart scrub",
+    "category": "stageshow-scenes",
+    "file": "stageshow/chart-scrub.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "chart-scrub"
+    ],
+    "description": "A hairline and dot that follow the pointer, the headline value rolling to the day under it.",
+    "inspiredBy": "Stageshow · chart-scrub (MIT)"
+  },
+  {
+    "id": "stageshow-table-edit",
+    "name": "Edit in a table",
+    "category": "stageshow-scenes",
+    "file": "stageshow/table-edit.html",
+    "w": 660,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "table-edit"
+    ],
+    "description": "A cell edited in place, then the total it feeds rolls a beat later.",
+    "inspiredBy": "Stageshow · table-edit (MIT)"
+  },
+  {
+    "id": "stageshow-loading",
+    "name": "Loading to content",
+    "category": "stageshow-scenes",
+    "file": "stageshow/loading.html",
+    "w": 600,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "loading"
+    ],
+    "description": "A skeleton at the content's own geometry, rows resolving top to bottom, real chrome throughout.",
+    "inspiredBy": "Stageshow · loading (MIT)"
+  },
+  {
+    "id": "stageshow-dark-hero",
+    "name": "Dark hero",
+    "category": "stageshow-scenes",
+    "file": "stageshow/dark-hero.html",
+    "w": 760,
+    "h": 440,
+    "bg": "dark",
+    "tags": [
+      "stageshow",
+      "scene",
+      "dark-hero"
+    ],
+    "description": "Depth from surface steps on black, one lit color, a status that changes on its own pill.",
+    "inspiredBy": "Stageshow · dark-hero (MIT)"
+  },
+  {
+    "id": "stageshow-presence",
+    "name": "Live collaborators",
+    "category": "stageshow-scenes",
+    "file": "stageshow/presence.html",
+    "w": 660,
+    "h": 420,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "presence"
+    ],
+    "description": "Each person one color everywhere, names riding their cursors, work shown in the doc's own marks.",
+    "inspiredBy": "Stageshow · presence (MIT)"
+  },
+  {
+    "id": "stageshow-subscriptions",
+    "name": "Subscription handoff",
+    "category": "stageshow-scenes",
+    "file": "stageshow/subscriptions.html",
+    "w": 720,
+    "h": 440,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "subscriptions"
+    ],
+    "description": "A chip flies into a row, MRR rolls, a second scene is the reset.",
+    "inspiredBy": "Stageshow · subscriptions (MIT)"
+  },
+  {
+    "id": "stageshow-close-up",
+    "name": "Close-up",
+    "category": "stageshow-scenes",
+    "file": "stageshow/close-up.html",
+    "w": 400,
+    "h": 300,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "close-up"
+    ],
+    "description": "One control at 1.4x with its window's chrome, the row whole, a large cursor to match.",
+    "inspiredBy": "Stageshow · close-up (MIT)"
+  },
+  {
+    "id": "stageshow-many-of-one",
+    "name": "Many of one",
+    "category": "stageshow-scenes",
+    "file": "stageshow/many-of-one.html",
+    "w": 640,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "many-of-one"
+    ],
+    "description": "A grid of one thing off every edge, one tile in focus by depth, the only one with words.",
+    "inspiredBy": "Stageshow · many-of-one (MIT)"
+  },
+  {
+    "id": "stageshow-fade-crop",
+    "name": "Fade crop",
+    "category": "stageshow-scenes",
+    "file": "stageshow/fade-crop.html",
+    "w": 640,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "fade-crop"
+    ],
+    "description": "A window fading out at its foot, over filler, instead of running off an edge.",
+    "inspiredBy": "Stageshow · fade-crop (MIT)"
+  },
+  {
+    "id": "stageshow-panel-annotation",
+    "name": "Panel over product",
+    "category": "stageshow-scenes",
+    "file": "stageshow/panel-annotation.html",
+    "w": 640,
+    "h": 440,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "panel-annotation"
+    ],
+    "description": "A settings panel over the product's margin, one leader from the setting to what it changed.",
+    "inspiredBy": "Stageshow · panel-annotation (MIT)"
+  },
+  {
+    "id": "stageshow-overlap",
+    "name": "Overlapping windows",
+    "category": "stageshow-scenes",
+    "file": "stageshow/overlap.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "overlap"
+    ],
+    "description": "A card in front of a window, its edge on the window's sidebar line.",
+    "inspiredBy": "Stageshow · overlap (MIT)"
+  },
+  {
+    "id": "stageshow-stacked-cards",
+    "name": "Stacked cards",
+    "category": "stageshow-scenes",
+    "file": "stageshow/stacked-cards.html",
+    "w": 520,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "stacked-cards"
+    ],
+    "description": "Two components at one width, a small gap, the lower one off the bottom.",
+    "inspiredBy": "Stageshow · stacked-cards (MIT)"
+  },
+  {
+    "id": "stageshow-opposite-corners",
+    "name": "Opposite corners",
+    "category": "stageshow-scenes",
+    "file": "stageshow/opposite-corners.html",
+    "w": 400,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "opposite-corners"
+    ],
+    "description": "A bento tile: copy bottom-left, the product hung from the top-right corner.",
+    "inspiredBy": "Stageshow · opposite-corners (MIT)"
+  },
+  {
+    "id": "stageshow-tilted-stack",
+    "name": "Tilted stack",
+    "category": "stageshow-scenes",
+    "file": "stageshow/tilted-stack.html",
+    "w": 480,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "tilted-stack"
+    ],
+    "description": "A loose pile of paper, small alternating angles, only the top card has words.",
+    "inspiredBy": "Stageshow · tilted-stack (MIT)"
+  },
+  {
+    "id": "stageshow-corner-chip",
+    "name": "Corner chip",
+    "category": "stageshow-scenes",
+    "file": "stageshow/corner-chip.html",
+    "w": 520,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "corner-chip"
+    ],
+    "description": "A small chip centered on a window's corner, half outside.",
+    "inspiredBy": "Stageshow · corner-chip (MIT)"
+  },
+  {
+    "id": "stageshow-monochrome",
+    "name": "Monochrome",
+    "category": "stageshow-scenes",
+    "file": "stageshow/monochrome.html",
+    "w": 720,
+    "h": 320,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "monochrome"
+    ],
+    "description": "Other companies' products in a row, grayscale, faded at the foot.",
+    "inspiredBy": "Stageshow · monochrome (MIT)"
+  },
+  {
+    "id": "stageshow-window-row",
+    "name": "Row of windows",
+    "category": "stageshow-scenes",
+    "file": "stageshow/window-row.html",
+    "w": 720,
+    "h": 300,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "window-row"
+    ],
+    "description": "Sessions side by side at one height: focus by depth, neighbors cut by the stage, only filler cropped.",
+    "inspiredBy": "Stageshow · window-row (MIT)"
+  },
+  {
+    "id": "stageshow-device-pair",
+    "name": "Window and phone",
+    "category": "stageshow-scenes",
+    "file": "stageshow/device-pair.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "device-pair"
+    ],
+    "description": "A dashboard and a lock screen telling one event; the phone straddles over margin, never over the figure.",
+    "inspiredBy": "Stageshow · device-pair (MIT)"
+  },
+  {
+    "id": "stageshow-story",
+    "name": "Invoice story",
+    "category": "stageshow-scenes",
+    "file": "stageshow/story.html",
+    "w": 640,
+    "h": 452,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "story"
+    ],
+    "description": "An invoice, a plan, a connector, rolling totals.",
+    "inspiredBy": "Stageshow · story (MIT)"
+  },
+  {
+    "id": "stageshow-calendar",
+    "name": "Calendar drag",
+    "category": "stageshow-scenes",
+    "file": "stageshow/calendar.html",
+    "w": 550,
+    "h": 360,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "calendar"
+    ],
+    "description": "A populated week, one focal event, a measured pickup.",
+    "inspiredBy": "Stageshow · calendar (MIT)"
+  },
+  {
+    "id": "stageshow-freeform-drag",
+    "name": "Drag and drop",
+    "category": "stageshow-scenes",
+    "file": "stageshow/freeform-drag.html",
+    "w": 560,
+    "h": 340,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "freeform-drag"
+    ],
+    "description": "Grab offset, a measured grid, a drop slot that snaps.",
+    "inspiredBy": "Stageshow · freeform-drag (MIT)"
+  },
+  {
+    "id": "stageshow-phone-touch",
+    "name": "Card expansion",
+    "category": "stageshow-scenes",
+    "file": "stageshow/phone-touch.html",
+    "w": 400,
+    "h": 520,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "phone-touch"
+    ],
+    "description": "A card opens into its screen as one object, and the loop folds back.",
+    "inspiredBy": "Stageshow · phone-touch (MIT)"
+  },
+  {
+    "id": "stageshow-dynamic-island",
+    "name": "Dynamic Island",
+    "category": "stageshow-scenes",
+    "file": "stageshow/dynamic-island.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "dynamic-island"
+    ],
+    "description": "One black shape, its content a separate layer.",
+    "inspiredBy": "Stageshow · dynamic-island (MIT)"
+  },
+  {
+    "id": "stageshow-messages",
+    "name": "Messages",
+    "category": "stageshow-scenes",
+    "file": "stageshow/messages.html",
+    "w": 420,
+    "h": 340,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "messages"
+    ],
+    "description": "Composer, typing, receipts, a bubble's lifetime.",
+    "inspiredBy": "Stageshow · messages (MIT)"
+  },
+  {
+    "id": "stageshow-cursors",
+    "name": "Cursor kinds",
+    "category": "stageshow-kit",
+    "file": "stageshow/cursors.html",
+    "w": 704,
+    "h": 562,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "specimen",
+      "cursors"
+    ],
+    "description": "Cursor kinds and direct feedback across common interactions.",
+    "inspiredBy": "Stageshow · cursors (MIT)"
+  },
+  {
+    "id": "stageshow-cursor-morph",
+    "name": "Cursor morph",
+    "category": "stageshow-scenes",
+    "file": "stageshow/cursor-morph.html",
+    "w": 550,
+    "h": 200,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "morph",
+      "cursor-morph"
+    ],
+    "description": "One outline becomes four cursor styles. Position, press feedback, and shape share the same stage.",
+    "inspiredBy": "Stageshow · cursor-morph (MIT)"
+  },
+  {
+    "id": "stageshow-cursor-resize",
+    "name": "Resize cursors",
+    "category": "stageshow-scenes",
+    "file": "stageshow/cursor-resize.html",
+    "w": 440,
+    "h": 300,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "cursor-resize"
+    ],
+    "description": "Resize edges and corners, the cursor changing kind as it crosses them.",
+    "inspiredBy": "Stageshow · cursor-resize (MIT)"
+  },
+  {
+    "id": "stageshow-annotations",
+    "name": "Annotations and lines",
+    "category": "stageshow-scenes",
+    "file": "stageshow/annotations.html",
+    "w": 600,
+    "h": 571,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "annotations"
+    ],
+    "description": "Leaders, dimensions, flows and a moving target.",
+    "inspiredBy": "Stageshow · annotations (MIT)"
+  },
+  {
+    "id": "stageshow-bento",
+    "name": "Feature grid",
+    "category": "stageshow-scenes",
+    "file": "stageshow/bento.html",
+    "w": 984,
+    "h": 714,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "bento"
+    ],
+    "description": "One hero, one window, a stat, an object, a diagram.",
+    "inspiredBy": "Stageshow · bento (MIT)"
+  },
+  {
+    "id": "stageshow-ruled-bento",
+    "name": "Technical grid",
+    "category": "stageshow-scenes",
+    "file": "stageshow/ruled-bento.html",
+    "w": 984,
+    "h": 934,
+    "bg": "dark",
+    "tags": [
+      "stageshow",
+      "scene",
+      "ruled-bento"
+    ],
+    "description": "Shared rules and technical imagery.",
+    "inspiredBy": "Stageshow · ruled-bento (MIT)"
+  },
+  {
+    "id": "stageshow-staggered-bento",
+    "name": "Consumer grid",
+    "category": "stageshow-scenes",
+    "file": "stageshow/staggered-bento.html",
+    "w": 984,
+    "h": 1240,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "staggered-bento"
+    ],
+    "description": "Offset tiles, graphic art, physical objects.",
+    "inspiredBy": "Stageshow · staggered-bento (MIT)"
+  },
+  {
+    "id": "stageshow-hero-grid",
+    "name": "Hero grid",
+    "category": "stageshow-scenes",
+    "file": "stageshow/hero-grid.html",
+    "w": 680,
+    "h": 759,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "hero-grid"
+    ],
+    "description": "Different grounds and materials composed as one picture.",
+    "inspiredBy": "Stageshow · hero-grid (MIT)"
+  },
+  {
+    "id": "stageshow-upload",
+    "name": "Upload",
+    "category": "stageshow-scenes",
+    "file": "stageshow/upload.html",
+    "w": 760,
+    "h": 420,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "upload"
+    ],
+    "description": "A file dragged in from the desktop, an upload row with progress that settles as a file row.",
+    "inspiredBy": "Stageshow · upload (MIT)"
+  },
+  {
+    "id": "stageshow-share",
+    "name": "Share",
+    "category": "stageshow-scenes",
+    "file": "stageshow/share.html",
+    "w": 480,
+    "h": 340,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "share"
+    ],
+    "description": "A share popover over a document: an email becomes a chip, a role menu, a person added to the list.",
+    "inspiredBy": "Stageshow · share (MIT)"
+  },
+  {
+    "id": "stageshow-swipe",
+    "name": "Swipe",
+    "category": "stageshow-scenes",
+    "file": "stageshow/swipe.html",
+    "w": 400,
+    "h": 480,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "scene",
+      "swipe"
+    ],
+    "description": "A phone swipe to archive: press, swipe, a throw at the finger's speed, the gap closes.",
+    "inspiredBy": "Stageshow · swipe (MIT)"
+  },
+  {
+    "id": "stageshow-contrasts",
+    "name": "Comparisons",
+    "category": "stageshow-kit",
+    "file": "stageshow/contrasts.html",
+    "w": 960,
+    "h": 279,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "teaching",
+      "contrasts"
+    ],
+    "description": "Paired studies of motion, framing, hierarchy and restraint. Choose a principle to inspect.",
+    "inspiredBy": "Stageshow · contrasts (MIT)"
+  },
+  {
+    "id": "stageshow-figma",
+    "name": "Figma",
+    "category": "stageshow-products",
+    "file": "stageshow/figma.html",
+    "w": 860,
+    "h": 480,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "figma"
+    ],
+    "description": "Canvas selection, a color picker, a second cursor.",
+    "inspiredBy": "Stageshow · figma (MIT)"
+  },
+  {
+    "id": "stageshow-linear",
+    "name": "Linear",
+    "category": "stageshow-products",
+    "file": "stageshow/linear.html",
+    "w": 920,
+    "h": 470,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "linear"
+    ],
+    "description": "Command menu and assignment.",
+    "inspiredBy": "Stageshow · linear (MIT)"
+  },
+  {
+    "id": "stageshow-slack",
+    "name": "Slack",
+    "category": "stageshow-products",
+    "file": "stageshow/slack.html",
+    "w": 940,
+    "h": 540,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "slack"
+    ],
+    "description": "Messages, a reaction, a thread reply.",
+    "inspiredBy": "Stageshow · slack (MIT)"
+  },
+  {
+    "id": "stageshow-raycast",
+    "name": "Raycast",
+    "category": "stageshow-products",
+    "file": "stageshow/raycast.html",
+    "w": 760,
+    "h": 440,
+    "bg": "dark",
+    "tags": [
+      "stageshow",
+      "product",
+      "raycast"
+    ],
+    "description": "Search and clipboard history over a blurred desktop.",
+    "inspiredBy": "Stageshow · raycast (MIT)"
+  },
+  {
+    "id": "stageshow-finder",
+    "name": "Finder",
+    "category": "stageshow-products",
+    "file": "stageshow/finder.html",
+    "w": 820,
+    "h": 420,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "finder"
+    ],
+    "description": "Quick Look over a file list; a file moved into a folder; the same window in frosted glass.",
+    "inspiredBy": "Stageshow · finder (MIT)"
+  },
+  {
+    "id": "stageshow-finder-glass",
+    "name": "Finder · glass",
+    "category": "stageshow-products",
+    "file": "stageshow/finder-glass.html",
+    "w": 860,
+    "h": 440,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "finder-glass"
+    ],
+    "description": "Quick Look over a file list; a file moved into a folder; the same window in frosted glass.",
+    "inspiredBy": "Stageshow · finder-glass (MIT)"
+  },
+  {
+    "id": "stageshow-spotify",
+    "name": "Spotify",
+    "category": "stageshow-products",
+    "file": "stageshow/spotify.html",
+    "w": 860,
+    "h": 600,
+    "bg": "dark",
+    "tags": [
+      "stageshow",
+      "product",
+      "spotify"
+    ],
+    "description": "A dark desktop app with album art.",
+    "inspiredBy": "Stageshow · spotify (MIT)"
+  },
+  {
+    "id": "stageshow-notion",
+    "name": "Notion",
+    "category": "stageshow-products",
+    "file": "stageshow/notion.html",
+    "w": 720,
+    "h": 538,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "notion"
+    ],
+    "description": "A slash command; a comment and its reply.",
+    "inspiredBy": "Stageshow · notion (MIT)"
+  },
+  {
+    "id": "stageshow-google-docs",
+    "name": "Google Docs",
+    "category": "stageshow-products",
+    "file": "stageshow/google-docs.html",
+    "w": 940,
+    "h": 600,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "google-docs"
+    ],
+    "description": "A slash command; a comment and its reply.",
+    "inspiredBy": "Stageshow · google-docs (MIT)"
+  },
+  {
+    "id": "stageshow-gmail",
+    "name": "Gmail",
+    "category": "stageshow-products",
+    "file": "stageshow/gmail.html",
+    "w": 760,
+    "h": 420,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "gmail"
+    ],
+    "description": "Hover actions, archive, an undo toast.",
+    "inspiredBy": "Stageshow · gmail (MIT)"
+  },
+  {
+    "id": "stageshow-google-calendar",
+    "name": "Google Calendar",
+    "category": "stageshow-products",
+    "file": "stageshow/google-calendar.html",
+    "w": 800,
+    "h": 460,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "google-calendar"
+    ],
+    "description": "Drag to create an event, the quick-create popup.",
+    "inspiredBy": "Stageshow · google-calendar (MIT)"
+  },
+  {
+    "id": "stageshow-powerpoint",
+    "name": "PowerPoint",
+    "category": "stageshow-products",
+    "file": "stageshow/powerpoint.html",
+    "w": 920,
+    "h": 540,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "powerpoint"
+    ],
+    "description": "Slide editing; AutoSum and a chart.",
+    "inspiredBy": "Stageshow · powerpoint (MIT)"
+  },
+  {
+    "id": "stageshow-excel",
+    "name": "Excel",
+    "category": "stageshow-products",
+    "file": "stageshow/excel.html",
+    "w": 860,
+    "h": 480,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "excel"
+    ],
+    "description": "Slide editing; AutoSum and a chart.",
+    "inspiredBy": "Stageshow · excel (MIT)"
+  },
+  {
+    "id": "stageshow-wikipedia",
+    "name": "Wikipedia",
+    "category": "stageshow-products",
+    "file": "stageshow/wikipedia.html",
+    "w": 800,
+    "h": 560,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "wikipedia"
+    ],
+    "description": "Search suggestions in a browser.",
+    "inspiredBy": "Stageshow · wikipedia (MIT)"
+  },
+  {
+    "id": "stageshow-telegram",
+    "name": "Telegram",
+    "category": "stageshow-products",
+    "file": "stageshow/telegram.html",
+    "w": 400,
+    "h": 520,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "telegram"
+    ],
+    "description": "Native chat apps on an iPhone.",
+    "inspiredBy": "Stageshow · telegram (MIT)"
+  },
+  {
+    "id": "stageshow-imessage",
+    "name": "iMessage",
+    "category": "stageshow-products",
+    "file": "stageshow/imessage.html",
+    "w": 420,
+    "h": 620,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "product",
+      "imessage"
+    ],
+    "description": "Native chat apps on an iPhone.",
+    "inspiredBy": "Stageshow · imessage (MIT)"
+  },
+  {
+    "id": "stageshow-backgrounds",
+    "name": "Backgrounds",
+    "category": "stageshow-kit",
+    "file": "stageshow/backgrounds.html",
+    "w": 960,
+    "h": 3621,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "backgrounds"
+    ],
+    "description": "One interface over twenty grounds: colorful gradients, light, linework and material.",
+    "inspiredBy": "Stageshow · backgrounds (MIT)"
+  },
+  {
+    "id": "stageshow-looks",
+    "name": "Visual styles",
+    "category": "stageshow-kit",
+    "file": "stageshow/looks.html",
+    "w": 740,
+    "h": 2174,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "looks"
+    ],
+    "description": "Type, shape and color working together. Treat the kit defaults as a starting point.",
+    "inspiredBy": "Stageshow · looks (MIT)"
+  },
+  {
+    "id": "stageshow-brand-marks",
+    "name": "Brand marks",
+    "category": "stageshow-kit",
+    "file": "stageshow/brand-marks.html",
+    "w": 1280,
+    "h": 1916,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "brand-marks"
+    ],
+    "description": "Common payment, app, bank and crypto marks, with original artwork on light and dark surfaces.",
+    "inspiredBy": "Stageshow · brand-marks (MIT)"
+  },
+  {
+    "id": "stageshow-chrome",
+    "name": "Window chrome",
+    "category": "stageshow-kit",
+    "file": "stageshow/chrome.html",
+    "w": 1044,
+    "h": 1180,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "chrome"
+    ],
+    "description": "Twelve window frames, including glass with an inset page, card, hairline and native browser variants.",
+    "inspiredBy": "Stageshow · chrome (MIT)"
+  },
+  {
+    "id": "stageshow-phones",
+    "name": "Phones",
+    "category": "stageshow-kit",
+    "file": "stageshow/phones.html",
+    "w": 720,
+    "h": 860,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "phones"
+    ],
+    "description": "Every phone frame in the kit.",
+    "inspiredBy": "Stageshow · phones (MIT)"
+  },
+  {
+    "id": "stageshow-controls",
+    "name": "Controls",
+    "category": "stageshow-kit",
+    "file": "stageshow/controls.html",
+    "w": 760,
+    "h": 460,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "controls"
+    ],
+    "description": "Field, Segmented, Toggle, Tabs, Code, Chart, Slot, Scroll and a Camera push-in.",
+    "inspiredBy": "Stageshow · controls (MIT)"
+  },
+  {
+    "id": "stageshow-parts",
+    "name": "Parts",
+    "category": "stageshow-kit",
+    "file": "stageshow/parts.html",
+    "w": 760,
+    "h": 460,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "parts"
+    ],
+    "description": "States, Check, Meter, Stream, Connector arrows, Popover and Menu, the satellite lock screen.",
+    "inspiredBy": "Stageshow · parts (MIT)"
+  },
+  {
+    "id": "stageshow-kit-extras",
+    "name": "Kit extras",
+    "category": "stageshow-kit",
+    "file": "stageshow/kit-extras.html",
+    "w": 760,
+    "h": 460,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "kit-extras"
+    ],
+    "description": "Chip, Swap, Avatar rings, Meter tones, Menu hover, Expand, solid glyphs, BrandMark.",
+    "inspiredBy": "Stageshow · kit-extras (MIT)"
+  },
+  {
+    "id": "stageshow-glass",
+    "name": "Glass",
+    "category": "stageshow-kit",
+    "file": "stageshow/glass.html",
+    "w": 640,
+    "h": 400,
+    "bg": "light",
+    "tags": [
+      "stageshow",
+      "reference",
+      "glass"
+    ],
+    "description": "The glass theme on a window, a chip and a popover.",
+    "inspiredBy": "Stageshow · glass (MIT)"
+  }
+]

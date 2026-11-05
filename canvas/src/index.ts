@@ -16,9 +16,10 @@ import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 import { branchToUi, toUiMessage } from "./messages.ts";
 import { type CanvasContext, renderContext } from "./context.ts";
-import { canvasEdit, canvasNew, canvasRead, canvasReport, canvasScreenshot, type CoreHost, importUrl, NODE_DOC, openBrowser, OP_NAMES, TOOL_TEXT } from "./core.ts";
+import { canvasEdit, canvasKits, canvasNew, canvasRead, canvasReport, canvasScreenshot, type CoreHost, importUrl, NODE_DOC, openBrowser, OP_NAMES, resolveDoc, TOOL_TEXT } from "./core.ts";
 import { CanvasServer } from "./server.ts";
 import { type CanvasOp, DocStore } from "./store.ts";
+import { kitApi } from "./kits.ts";
 
 const HERE = (() => {
 	try {
@@ -133,6 +134,7 @@ export default function piCanvas(pi: ExtensionAPI) {
 					return doc;
 				},
 				applyOps: (id, ops) => applyOps(id, ops as CanvasOp[], "browser"),
+				agentApi: (path, method, body) => kitApi(path, method, body, (id) => resolveDoc(host, id), (id, ops) => applyOps(id, ops, "browser")),
 				prompt: ({ text, context, images }) => {
 					const trimmed = text.trim();
 					if (!trimmed && !images?.length) return { ok: false, error: "empty message" };
@@ -319,6 +321,27 @@ export default function piCanvas(pi: ExtensionAPI) {
 			ctxRef = ctx;
 			getStore(ctx);
 			return canvasReport(host, params as any);
+		},
+	});
+
+	pi.registerTool({
+		name: "canvas_kits",
+		label: "Canvas Kits",
+		description: TOOL_TEXT.canvas_kits.description,
+		promptSnippet: TOOL_TEXT.canvas_kits.snippet,
+		promptGuidelines: [...TOOL_TEXT.canvas_kits.guidelines],
+		parameters: Type.Object({
+			kit: Type.Optional(Type.String()),
+			component: Type.Optional(Type.String({ description: "Exact component name or kit id to inspect" })),
+			insert: Type.Optional(Type.Union([Type.Literal("all"), Type.Array(Type.String())])),
+			docId: Type.Optional(Type.String()),
+			x: Type.Optional(Type.Number()),
+			y: Type.Optional(Type.Number()),
+			theme: Type.Optional(Type.String({ description: "Light (default) or Dark, case insensitive" })),
+		}),
+		async execute(_id, params, _signal, _onUpdate, ctx) {
+			ctxRef = ctx;
+			return canvasKits(host, params);
 		},
 	});
 

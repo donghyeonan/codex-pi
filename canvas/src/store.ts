@@ -56,6 +56,7 @@ export interface CanvasNode {
 	fills?: Paint[];
 	stroke?: string;
 	strokeWidth?: number;
+	strokeWidths?: [number, number, number, number];
 	strokeAlign?: "inside" | "outside" | "center";
 	radius?: number;
 	radii?: [number, number, number, number];
@@ -67,6 +68,7 @@ export interface CanvasNode {
 	layout?: FlexLayout;
 	sizeW?: "fixed" | "hug" | "fill";
 	sizeH?: "fixed" | "hug" | "fill";
+	layoutPosition?: "auto" | "absolute";
 	// text / note
 	text?: string;
 	fontFamily?: string;
@@ -81,7 +83,8 @@ export interface CanvasNode {
 	// shapes
 	sides?: number;
 	d?: string;
-	viewBox?: [number, number];
+	pathFit?: boolean;
+	viewBox?: [number, number] | [number, number, number, number];
 	// image / icon
 	src?: string;
 	fit?: "cover" | "contain" | "fill";
@@ -160,8 +163,8 @@ const NODE_DEFAULTS: Record<NodeType, Partial<CanvasNode>> = {
 const NUMERIC = new Set([
 	"x", "y", "w", "h", "z", "rotation", "opacity", "strokeWidth", "radius", "fontSize", "fontWeight", "lineHeight", "letterSpacing", "sides",
 ]);
-const BOOL = new Set(["autoHeight", "clip", "flipX", "flipY", "visible", "locked", "isComponent"]);
-const COMPLEX = new Set(["fills", "effects", "layout", "radii", "viewBox"]);
+const BOOL = new Set(["autoHeight", "clip", "flipX", "flipY", "visible", "locked", "isComponent", "pathFit"]);
+const COMPLEX = new Set(["fills", "effects", "layout", "radii", "viewBox", "strokeWidths"]);
 const MAX_COMPLEX = 50_000;
 
 function sanitizeProps(props: Record<string, unknown>): Partial<CanvasNode> {
@@ -375,7 +378,7 @@ export class DocStore {
 				}
 				case "set_variables": {
 					const vars: Record<string, string> = {};
-					for (const [k, v] of Object.entries(op.variables ?? {})) if (/^[\w-]{1,64}$/.test(k)) vars[k] = String(v);
+					for (const [k, v] of Object.entries(op.variables ?? {})) if (/^[\w/.-]{1,128}$/.test(k)) vars[k] = String(v);
 					doc.variables = vars;
 					results.push(`set ${Object.keys(vars).length} variable(s)`);
 					break;

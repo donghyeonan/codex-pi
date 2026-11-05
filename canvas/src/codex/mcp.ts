@@ -107,6 +107,24 @@ export const TOOLS = [
 		annotations: { title: "New canvas design", openWorldHint: false },
 	},
 	{
+		name: "canvas_kits",
+		description: TOOL_TEXT.canvas_kits.description,
+		inputSchema: {
+			type: "object",
+			properties: {
+				kit: str("Design kit name (omit to list bundled kits)"),
+				component: str("Exact component name or kit id to inspect"),
+				insert: { anyOf: [{ type: "string", const: "all" }, { type: "array", items: { type: "string" } }] },
+				docId: str("Document id (default: active document)"),
+				x: { type: "number" },
+				y: { type: "number" },
+				theme: str("Light (default) or Dark, case insensitive"),
+			},
+			additionalProperties: false,
+		},
+		annotations: { title: "Canvas kits", destructiveHint: false, openWorldHint: false },
+	},
+	{
 		name: "canvas_screenshot",
 		description: TOOL_TEXT.canvas_screenshot.description,
 		inputSchema: {
@@ -123,6 +141,7 @@ export const INSTRUCTIONS = [
 	"When the user invokes $canvas or asks to open the canvas, call canvas_open.",
 	...TOOL_TEXT.canvas_report.guidelines,
 	...TOOL_TEXT.canvas_new.guidelines,
+	...TOOL_TEXT.canvas_kits.guidelines,
 	...TOOL_TEXT.canvas_screenshot.guidelines,
 ].join("\n");
 

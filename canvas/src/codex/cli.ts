@@ -8,7 +8,7 @@
  *   codex-canvas stop               stop the workspace host
  *   codex-canvas host | mcp         run the host / MCP server in the foreground (used by Codex)
  */
-import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canvasDir, codexHome, daemonSocket, DEFAULT_PORT, serverFile } from "./paths.ts";
@@ -19,6 +19,7 @@ const BEGIN = "# >>> pi-canvas (managed by `codex-canvas install`) >>>";
 const END = "# <<< pi-canvas <<<";
 const CANVAS_SKILL = join(ROOT, "codex", "skills", "canvas");
 const DESIGN_SKILLS = join(ROOT, "skills");
+const STAGESHOW_SKILL = join(ROOT, "vendor", "stageshow");
 const MARK = ".pi-canvas-managed";
 
 const configPath = () => join(codexHome(), "config.toml");
@@ -35,7 +36,7 @@ function stripBlock(toml: string) {
 function linkSkill(src: string, name: string) {
 	const dest = join(skillsDir(), name);
 	if (existsSync(dest) || isLink(dest)) {
-		if (!existsSync(join(dest, MARK)) && !isLink(dest)) return `skipped ${name} (a skill with that name already exists)`;
+		if (!existsSync(join(dest, MARK)) && !linksTo(dest, src)) return `skipped ${name} (a skill with that name already exists)`;
 		rmSync(dest, { recursive: true, force: true });
 	}
 	mkdirSync(skillsDir(), { recursive: true });
@@ -56,6 +57,9 @@ function isLink(p: string) {
 	}
 }
 
+function linksTo(dest: string, src: string) {
+	return isLink(dest) && resolve(dirname(dest), readlinkSync(dest)) === resolve(src);
+}
 
 function install(args: string[]) {
 	const portArg = args.indexOf("--port");
@@ -88,8 +92,9 @@ function install(args: string[]) {
 	const done = [`MCP server "canvas" in ${path}`];
 	if (kitSkills || args.includes("--no-skills")) done.push(kitSkills ? "skills: use the kit's .agents/skills (cp -R .agents into your project)" : "skills: skipped");
 	else done.push(linkSkill(CANVAS_SKILL, "canvas"));
-	if (!kitSkills && !args.includes("--no-skills") && !args.includes("--no-design-skills") && existsSync(DESIGN_SKILLS)) {
-		for (const n of readdirSync(DESIGN_SKILLS)) if (existsSync(join(DESIGN_SKILLS, n, "SKILL.md"))) done.push(linkSkill(join(DESIGN_SKILLS, n), n));
+	if (!kitSkills && !args.includes("--no-skills") && !args.includes("--no-design-skills")) {
+		if (existsSync(DESIGN_SKILLS)) for (const n of readdirSync(DESIGN_SKILLS)) if (existsSync(join(DESIGN_SKILLS, n, "SKILL.md"))) done.push(linkSkill(join(DESIGN_SKILLS, n), n));
+		if (existsSync(join(STAGESHOW_SKILL, "SKILL.md"))) done.push(linkSkill(STAGESHOW_SKILL, "stageshow"));
 	}
 	console.log(`pi-canvas installed for Codex:\n  ${done.join("\n  ")}\n\nIn Codex, type $canvas (or ask for a report) — the workspace opens on http://127.0.0.1:${port ?? DEFAULT_PORT}.`);
 }
@@ -98,11 +103,11 @@ function uninstall() {
 	const path = configPath();
 	if (existsSync(path)) writeFileSync(path, stripBlock(readFileSync(path, "utf8")).replace(/\s*$/, "\n"));
 	const removed: string[] = [];
-	const owned = [CANVAS_SKILL, ...(existsSync(DESIGN_SKILLS) ? readdirSync(DESIGN_SKILLS).map((n) => join(DESIGN_SKILLS, n)) : [])];
+	const owned = [CANVAS_SKILL, STAGESHOW_SKILL, ...(existsSync(DESIGN_SKILLS) ? readdirSync(DESIGN_SKILLS).map((n) => join(DESIGN_SKILLS, n)) : [])];
 	for (const src of owned) {
 		const name = src.split(/[\\/]/).pop()!;
 		const dest = join(skillsDir(), name);
-		if (isLink(dest) || existsSync(join(dest, MARK))) {
+		if (linksTo(dest, src) || existsSync(join(dest, MARK))) {
 			rmSync(dest, { recursive: true, force: true });
 			removed.push(name);
 		}

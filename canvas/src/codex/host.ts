@@ -14,7 +14,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type CanvasContext, renderContext } from "../context.ts";
-import { canvasEdit, canvasNew, canvasRead, canvasReport, canvasScreenshot, type CoreHost, importUrl, openBrowser, type ToolResult } from "../core.ts";
+import { canvasEdit, canvasKits, canvasNew, canvasRead, canvasReport, canvasScreenshot, type CoreHost, importUrl, openBrowser, resolveDoc, type ToolResult } from "../core.ts";
+import { kitApi } from "../kits.ts";
 import type { UiMessage } from "../messages.ts";
 import { CanvasServer } from "../server.ts";
 import { type CanvasOp, DocStore } from "../store.ts";
@@ -130,6 +131,8 @@ async function runTool(name: string, args: any): Promise<ToolResult> {
 			return canvasReport(host, args ?? {}, BROWSER_NOTE);
 		case "canvas_read":
 			return canvasRead(host, args ?? {});
+		case "canvas_kits":
+			return canvasKits(host, args ?? {});
 		case "canvas_edit":
 			return canvasEdit(host, args ?? {});
 		case "canvas_new":
@@ -178,6 +181,9 @@ server = new CanvasServer(WEB, token, {
 	skills: () => [],
 	importUrl,
 	agentApi: async (path, method, body) => {
+		if (path === "kits" || path.startsWith("kits/")) {
+			return kitApi(path, method, body, (id) => resolveDoc(host, id), (id, ops) => applyOps(id, ops, "browser"));
+		}
 		switch (`${method} ${path}`) {
 			case "POST ping":
 				lastPing = Date.now();
