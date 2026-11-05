@@ -1,0 +1,190 @@
+<!doctype html>
+<!-- pi-canvas goodie: Context Menu. Original implementation. Inspired by Reacticx context-menu (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Context Menu</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; background: #0a0a0b; -webkit-font-smoothing: antialiased; color: #f2f2f5; -webkit-user-select: none; user-select: none;
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  .chat { width: min(90vw, 340px); margin: 0 auto; padding-top: clamp(14px, 6vh, 34px); display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.35; }
+  .time { text-align: center; font-size: 11px; color: #6f6f7a; margin-bottom: 6px; }
+  .time b { color: #a6a6b0; font-weight: 600; }
+  .msg { max-width: 72%; padding: 9px 13px; border-radius: 19px; position: relative; }
+  .in { align-self: flex-start; background: #26262b; border-bottom-left-radius: 6px; }
+  .out { align-self: flex-end; background: linear-gradient(#3b8cff, #1f6fff); border-bottom-right-radius: 6px; }
+  .target { cursor: context-menu; outline: none; transition: transform .35s cubic-bezier(.3, 1.6, .5, 1), box-shadow .35s; touch-action: none; }
+  .target:focus-visible { box-shadow: 0 0 0 2px #3b8cff; }
+  .target.pressing { transform: scale(.95); transition: transform .45s ease-out; }
+  .target.lifted { z-index: 6; transform: scale(1.04); box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  .badge {
+    position: absolute; right: -10px; top: -12px; width: 24px; height: 24px; border-radius: 50%; background: #3a3a41; border: 2px solid #0a0a0b;
+    display: grid; place-items: center; transform: scale(0); transition: transform .5s cubic-bezier(.3, 1.8, .5, 1);
+  }
+  .badge.on { transform: scale(1); }
+  .scrim { position: fixed; inset: 0; z-index: 5; background: rgba(8, 8, 10, .35); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .scrim.on { opacity: 1; pointer-events: auto; }
+  .pop { position: fixed; z-index: 7; transform-origin: var(--ox) var(--oy); opacity: 0; transform: scale(.4); pointer-events: none;
+    transition: opacity .2s, transform .45s cubic-bezier(.25, 1.35, .4, 1); }
+  .pop.on { opacity: 1; transform: none; pointer-events: auto; }
+  .reacts { display: flex; gap: 2px; padding: 5px; border-radius: 22px; background: rgba(40, 40, 46, .96); box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 0 0 .5px rgba(255,255,255,.12); }
+  .reacts button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: none; cursor: pointer; display: grid; place-items: center; color: #d0d0d8; transition: transform .25s cubic-bezier(.3, 1.8, .5, 1), background .2s; }
+  .reacts button:hover, .reacts button:focus-visible { background: rgba(255,255,255,.1); transform: scale(1.18); outline: none; }
+  .menu { position: relative; width: 224px; }
+  .sheet { border-radius: 14px; overflow: hidden; background: rgba(36, 36, 42, .95); box-shadow: 0 18px 50px rgba(0,0,0,.55), inset 0 0 0 .5px rgba(255,255,255,.12);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); transition: transform .4s cubic-bezier(.3, 1.3, .5, 1), opacity .3s, filter .3s; }
+  .sub { position: absolute; left: 10px; right: -10px; top: 24px; opacity: 0; transform: translateY(-14px) scale(.92); pointer-events: none; }
+  .menu.deep .main { transform: scale(.94); opacity: .55; filter: blur(1.5px); }
+  .menu.deep .sub { opacity: 1; transform: none; pointer-events: auto; background: rgba(46, 46, 54, .98); }
+  .row {
+    display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding: 0 14px; border: 0; background: none; color: inherit; cursor: pointer; text-align: left;
+    font: 15px/1 ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif; box-sizing: border-box; outline: none;
+  }
+  .row + .row { box-shadow: inset 0 .5px 0 rgba(255,255,255,.1); }
+  .row.gap { border-top: 7px solid rgba(0,0,0,.22); }
+  .row span { flex: 1; }
+  .row svg { flex: none; }
+  .row:hover, .row:focus-visible, .row.hl { background: rgba(255,255,255,.1); }
+  .row.danger { color: #ff5a52; }
+  .row.head { color: #a6a6b0; font-size: 13px; font-weight: 600; height: 38px; }
+  .toast { position: fixed; left: 50%; bottom: 18px; transform: translate(-50%, 70px); z-index: 8; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 12px;
+    background: #1f1f24; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); transition: transform .5s cubic-bezier(.3, 1.5, .5, 1); white-space: nowrap; }
+  .toast.on { transform: translate(-50%, 0); }
+  @media (prefers-reduced-motion: reduce) { .pop, .sheet, .target, .badge, .toast { transition: none !important; } }
+</style>
+</head>
+<body>
+  <div class="chat">
+    <div class="time"><b>Theo</b> · Today 4:12 PM</div>
+    <div class="msg out">Found the perfect spot for golden hour</div>
+    <div class="msg in target" id="target" tabindex="0" aria-haspopup="menu" aria-label="Message from Theo. Long press or right-click for actions">Are we still on for the Ocean Beach shoot at 6?<span class="badge" id="badge"></span></div>
+    <div class="msg out">Yes! Bringing the 35mm and the reflector.</div>
+    <div class="msg in">Perfect. I'll grab coffee on the way</div>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <div class="pop" id="reactPop"><div class="reacts" id="reacts"></div></div>
+  <div class="pop" id="menuPop">
+    <div class="menu" id="menu" role="menu">
+      <div class="sheet main" id="main"></div>
+      <div class="sheet sub" id="sub"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+<script>
+(() => {
+  const ic = d => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const ICON = {
+    reply: ic('<path d="M10 8 5 12l5 4M5 12h9a5 5 0 0 1 5 5v1"/>'), copy: ic('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>'),
+    pin: ic('<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/>'), clock: ic('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'),
+    chev: ic('<path d="m9 6 6 6-6 6"/>'), back: ic('<path d="m15 6-6 6 6 6"/>'), trash: ic('<path d="M5 7h14M10 4h4M7 7l1 13h8l1-13"/>'),
+    sun: ic('<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>'),
+    moon: ic('<path d="M20 14a8 8 0 1 1-10-10 6 6 0 0 0 10 10z"/>'), hour: ic('<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>'),
+  };
+  const REACT = [
+    ['Love', '<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="#ff4f7a"/></svg>'],
+    ['Like', '<svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 10v10H4V10zM9 20h8.5a2 2 0 0 0 2-1.6l1.2-6A2 2 0 0 0 18.7 10H14V6a2 2 0 0 0-2-2l-3 6z" fill="#f2f2f5"/></svg>'],
+    ['Haha', '<b style="font:800 13px/1 ui-sans-serif,sans-serif;color:#f2f2f5;letter-spacing:-.02em">HA</b>'],
+    ['Wow', '<b style="font:900 17px/1 ui-sans-serif,sans-serif;color:#f2f2f5">!!</b>'],
+    ['Question', '<b style="font:900 17px/1 ui-sans-serif,sans-serif;color:#f2f2f5">?</b>'],
+  ];
+  const MAIN = [['reply', 'Reply'], ['copy', 'Copy'], ['pin', 'Pin'], ['clock', 'Remind me', 'more'], ['trash', 'Delete', 'danger gap']];
+  const SUB = [['back', 'Remind me', 'head back'], ['hour', 'In 1 hour'], ['moon', 'Tonight, 8:00 PM'], ['sun', 'Tomorrow morning']];
+  const $ = id => document.getElementById(id);
+  const target = $('target'), scrim = $('scrim'), reactPop = $('reactPop'), menuPop = $('menuPop'), menu = $('menu'), toast = $('toast');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let isOpen = false, auto = !reduce, timers = [], pressT;
+
+  const row = ([icon, label, cls = '']) => `<button class="row ${cls}" role="menuitem" data-label="${label}">` +
+    (cls.includes('back') ? ICON.back + `<span>${label}</span>` : `<span>${label}</span>` + (cls.includes('more') ? ICON.chev : ICON[icon])) + '</button>';
+  $('main').innerHTML = MAIN.map(row).join('');
+  $('sub').innerHTML = SUB.map(row).join('');
+  $('reacts').innerHTML = REACT.map(([n, s]) => `<button aria-label="${n}">${s}</button>`).join('');
+
+  function place() {
+    const r = target.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const rp = { width: reactPop.offsetWidth, height: reactPop.offsetHeight }, mh = $('main').offsetHeight;
+    let mTop = r.bottom + 12, below = mTop + mh < H - 8;
+    if (!below) mTop = Math.max(8, r.top - mh - 10);
+    const left = Math.min(Math.max(8, r.left), W - 232);
+    menuPop.style.left = left + 'px'; menuPop.style.top = mTop + 'px';
+    menuPop.style.setProperty('--ox', (r.left - left + 30) + 'px'); menuPop.style.setProperty('--oy', below ? '0px' : mh + 'px');
+    const rTop = below ? r.top - rp.height - 14 : r.bottom + 14;
+    reactPop.style.left = Math.min(Math.max(8, r.left), W - rp.width - 8) + 'px'; reactPop.style.top = rTop + 'px';
+    reactPop.style.setProperty('--ox', '30px'); reactPop.style.setProperty('--oy', below ? '100%' : '0px');
+  }
+  function open() {
+    if (isOpen) return; isOpen = true;
+    target.classList.remove('pressing'); target.classList.add('lifted');
+    place();
+    scrim.classList.add('on'); reactPop.classList.add('on');
+    setTimeout(() => isOpen && menuPop.classList.add('on'), reduce ? 0 : 50);
+  }
+  function close() {
+    if (!isOpen) return; isOpen = false;
+    [scrim, reactPop, menuPop].forEach(e => e.classList.remove('on'));
+    target.classList.remove('lifted'); menu.classList.remove('deep'); hl(null);
+    if (menu.contains(document.activeElement)) target.focus({ preventScroll: true });
+  }
+  function hl(el) { menu.querySelectorAll('.row').forEach(r => r.classList.toggle('hl', r === el)); }
+  function say(t) { toast.textContent = t; toast.classList.add('on'); clearTimeout(say.t); say.t = setTimeout(() => toast.classList.remove('on'), 1600); }
+  function choose(el) {
+    const cls = el.className, label = el.dataset.label;
+    if (cls.includes('more')) { menu.classList.add('deep'); if (menu.contains(document.activeElement)) $('sub').querySelector('.row:not(.head)').focus({ preventScroll: true }); return; }
+    if (cls.includes('back')) { menu.classList.remove('deep'); return; }
+    close();
+    say(cls.includes('danger') ? 'Message deleted' : $('sub').contains(el) ? `Reminder set · ${label}` : label === 'Copy' ? 'Copied to clipboard' : label === 'Pin' ? 'Pinned to top' : 'Replying to Theo');
+  }
+  function stopAuto() { if (!auto) return; auto = false; timers.forEach(clearTimeout); hl(null); }
+
+  // long press + right click
+  target.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return; stopAuto();
+    target.classList.add('pressing');
+    pressT = setTimeout(open, 480);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => target.addEventListener(t, () => { clearTimeout(pressT); target.classList.remove('pressing'); }));
+  target.addEventListener('contextmenu', e => { e.preventDefault(); stopAuto(); open(); });
+  target.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); stopAuto(); open(); menu.querySelector('.row').focus(); }
+  });
+  scrim.addEventListener('pointerdown', () => { stopAuto(); close(); });
+  menu.addEventListener('click', e => { const r = e.target.closest('.row'); if (r) { stopAuto(); choose(r); } });
+  menu.addEventListener('pointerover', e => { const r = e.target.closest('.row'); if (r) { stopAuto(); hl(r); } });
+  $('reacts').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; stopAuto();
+    $('badge').innerHTML = b.innerHTML.replace(/20/g, '13').replace(/1[37]px/g, '10px'); $('badge').classList.add('on'); close();
+  });
+  addEventListener('keydown', e => {
+    if (!isOpen) return;
+    if (e.key === 'Escape') { stopAuto(); menu.classList.contains('deep') ? menu.classList.remove('deep') : close(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); stopAuto();
+      const rows = [...(menu.classList.contains('deep') ? $('sub') : $('main')).querySelectorAll('.row')];
+      const i = rows.indexOf(document.activeElement);
+      rows[(i + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length].focus();
+    }
+  });
+  addEventListener('resize', () => isOpen && place());
+
+  function demo() {
+    if (!auto) return;
+    const at = (ms, fn) => timers.push(setTimeout(() => auto && fn(), ms));
+    const row = q => menu.querySelector(q);
+    at(250, () => target.classList.add('pressing'));
+    at(650, open);
+    at(2000, () => hl(row('.row.more')));
+    at(2600, () => { hl(null); menu.classList.add('deep'); });
+    at(3300, () => hl(row('#sub .row:nth-child(3)')));
+    at(4200, () => choose(row('#sub .row:nth-child(3)')));
+    at(6400, demo);
+  }
+  if (reduce) { open(); auto = false; } else demo();
+})();
+</script>
+</body>
+</html>

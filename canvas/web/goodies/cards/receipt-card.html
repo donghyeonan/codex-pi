@@ -1,0 +1,172 @@
+<!doctype html>
+<!-- pi-canvas goodie: Receipt Printer. Original implementation. Inspired by Reacticx receipt-card (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Receipt Printer</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; flex-direction: column; align-items: center; overflow: hidden; background: #0a0a0b;
+    background-image: radial-gradient(70% 50% at 50% 30%, #17171b 0%, transparent 80%);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  .printer {
+    position: relative; z-index: 2; margin-top: clamp(10px, 4vh, 22px); width: min(86vw, 300px); height: 46px; border-radius: 14px;
+    background: linear-gradient(#2b2b31, #1a1a1f); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 10px 24px rgba(0,0,0,.5);
+    display: flex; align-items: center; padding: 0 14px; box-sizing: border-box; gap: 10px; color: #8d8d98; font-size: 10.5px; letter-spacing: .08em;
+  }
+  .printer::after { /* paper slot */
+    content: ""; position: absolute; left: 18px; right: 18px; bottom: 7px; height: 5px; border-radius: 3px;
+    background: #050506; box-shadow: inset 0 2px 3px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.07);
+  }
+  .led { width: 6px; height: 6px; border-radius: 50%; background: #2f3a33; margin-bottom: 8px; }
+  .printing .led { background: #3dff8c; box-shadow: 0 0 8px #3dff8c; animation: blink .5s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .label { margin-bottom: 8px; font-weight: 600; }
+  .btn {
+    margin: 0 0 8px auto; border: 0; cursor: pointer; font: 600 10.5px/1 ui-sans-serif, -apple-system, "Segoe UI", sans-serif; letter-spacing: .04em; color: #e9e9ef;
+    padding: 6px 10px; border-radius: 8px; background: #3a3a43; box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 2px 0 #111;
+  }
+  .btn:active { transform: translateY(1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+  .btn:focus-visible { outline: 2px solid #3dff8c; outline-offset: 2px; }
+  .clip { position: relative; z-index: 1; margin-top: -9px; width: min(80vw, 268px); flex: 1; overflow: hidden; }
+  .paper {
+    position: absolute; left: 0; right: 0; top: 0; transform-origin: 50% 0; will-change: transform;
+    filter: drop-shadow(0 12px 16px rgba(0,0,0,.45));
+  }
+  .roll { overflow: hidden; height: 0; }
+  .sheet > * { opacity: 0; transition: opacity .35s; }
+  .sheet > .on { opacity: 1; }
+  .sheet {
+    background: linear-gradient(#e9e6dd, #fbf9f4 18px); padding: 18px 16px 10px; color: #2a2926;
+    font: 500 11px/15px ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .zig { display: block; width: 100%; height: 8px; }
+  .l { display: flex; justify-content: space-between; white-space: pre; }
+  .c { text-align: center; display: block; }
+  .h { font: 800 15px/1.2 ui-sans-serif, -apple-system, "Segoe UI", sans-serif; letter-spacing: .14em; }
+  .m { color: #75726b; }
+  .hr { border-top: 1.5px dashed #c4c0b5; margin: 7px 0; height: 0; }
+  .tot { font-weight: 800; font-size: 14px; line-height: 22px; }
+  .bars { height: 28px; margin: 8px 12px 4px; background: repeating-linear-gradient(90deg, #2a2926 0 2px, transparent 2px 3px, #2a2926 3px 4px, transparent 4px 7px, #2a2926 7px 10px, transparent 10px 11px); }
+  .stamp { display: inline-block; border: 1.5px solid #2f8f5b; color: #2f8f5b; border-radius: 4px; padding: 0 5px; font-weight: 700; font-size: 10px; transform: rotate(-4deg); }
+</style>
+</head>
+<body>
+  <div class="printer" id="printer">
+    <span class="led"></span><span class="label">KC‑80 THERMAL</span>
+    <button class="btn" id="btn">Print</button>
+  </div>
+  <div class="clip">
+    <div class="paper" id="paper">
+      <div class="roll" id="roll"><div class="sheet" id="sheet">
+        <span class="c h">KETTLE &amp; CRANE</span>
+        <span class="c m">Coffee Roasters · Valencia St</span>
+        <div class="hr"></div>
+        <div class="l m"><span>Order #4821</span><span>Nov 05 · 08:42</span></div>
+        <div class="l m"><span>Server: Priya</span><span>Table 7</span></div>
+        <div class="hr"></div>
+        <div class="l"><span>2 Oat Flat White</span><span>11.00</span></div>
+        <div class="l"><span>1 Cardamom Bun</span><span>4.75</span></div>
+        <div class="l"><span>1 Cold Brew Tonic</span><span>6.25</span></div>
+        <div class="l"><span>1 Avocado Toast</span><span>12.50</span></div>
+        <div class="hr"></div>
+        <div class="l m"><span>Subtotal</span><span>34.50</span></div>
+        <div class="l m"><span>Tax 8.63%</span><span>2.98</span></div>
+        <div class="l m"><span>Tip 15%</span><span>5.00</span></div>
+        <div class="l tot"><span>TOTAL</span><span id="total" data-v="42.48">$42.48</span></div>
+        <div class="l"><span>VISA •••• 2046</span><span class="stamp">APPROVED</span></div>
+        <div class="bars"></div>
+        <span class="c m">thank you · see you tomorrow</span>
+      </div></div>
+      <svg class="zig" viewBox="0 0 12 8" preserveAspectRatio="none" aria-hidden="true">
+        <defs><pattern id="z" width="12" height="8" patternUnits="userSpaceOnUse"><path d="M0 0H12L6 8Z" fill="#fbf9f4"/></pattern></defs><rect id="zr" width="12" height="8" fill="url(#z)"/>
+      </svg>
+    </div>
+  </div>
+<script>
+(() => {
+  const paper = document.getElementById('paper'), sheet = document.getElementById('sheet');
+  const printer = document.getElementById('printer'), btn = document.getElementById('btn');
+  const totalEl = document.getElementById('total');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // zigzag edge drawn as a pattern at real pixel width
+  const zig = paper.querySelector('.zig');
+  function sizeZig() {
+    const w = paper.clientWidth;
+    zig.setAttribute('viewBox', `0 0 ${w} 8`);
+    document.getElementById('zr').setAttribute('width', w);
+  }
+
+  const lines = [...sheet.children];
+  let stops = [], H = 0, idx = 0, y = 0, vy = 0, target = 0, auto = !reduce, state = 'idle', timer, rolled = false;
+
+  function measure() {
+    H = sheet.offsetHeight;
+    stops = lines.map(el => el.offsetTop + el.offsetHeight + 4);
+    stops[stops.length - 1] = H;
+  }
+  const roll = document.getElementById('roll');
+  function setY(v, rot) { roll.style.height = Math.max(0, v).toFixed(1) + 'px'; paper.style.transform = `rotate(${rot || 0}deg)`; }
+
+  function rollTotal() {
+    const end = parseFloat(totalEl.dataset.v), t0 = performance.now();
+    (function tick(now) {
+      const p = Math.min(1, (now - t0) / 650), e = 1 - Math.pow(1 - p, 3);
+      totalEl.textContent = '$' + (end * e).toFixed(2);
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  function feed() {
+    if (state !== 'printing') return;
+    target = stops[idx];
+    lines[idx].classList.add('on');
+    if (lines[idx] && lines[idx].contains(totalEl) && !rolled) { rolled = true; rollTotal(); }
+    idx++;
+    if (idx < stops.length) timer = setTimeout(feed, lines[idx - 1].classList.contains('hr') ? 70 : 150);
+    else { timer = setTimeout(() => { state = 'done'; printer.classList.remove('printing'); btn.textContent = 'Tear'; if (auto) timer = setTimeout(tear, 2600); }, 300); }
+  }
+  function print() {
+    clearTimeout(timer); measure();
+    idx = 0; y = 0; vy = 0; target = 0; rolled = false; totalEl.textContent = '$0.00';
+    paper.style.transition = 'none'; paper.style.opacity = 1; setY(0);
+    lines.forEach(l => l.classList.remove('on'));
+    state = 'printing'; printer.classList.add('printing'); btn.textContent = 'Printing…';
+    timer = setTimeout(feed, 400);
+  }
+  function tear() {
+    if (state !== 'done') return;
+    state = 'tearing'; btn.textContent = 'Print';
+    paper.style.transition = 'transform .7s cubic-bezier(.5,0,.75,0), opacity .7s';
+    paper.style.transform = `translateY(${H * 0.6}px) rotate(7deg)`; paper.style.opacity = 0;
+    timer = setTimeout(() => { state = 'idle'; if (auto) print(); }, 900);
+  }
+  function loop() {
+    if (state === 'printing' || (state === 'done' && Math.abs(target - y) > .2)) {
+      // stepper-motor feel: stiff spring with light damping
+      vy += ((target - y) * 0.22 - vy * 0.45);
+      y += vy;
+      setY(y, Math.max(-1, Math.min(1, vy * 0.06)));
+    }
+    requestAnimationFrame(loop);
+  }
+  function userAction() {
+    auto = false;
+    if (state === 'done') tear();
+    else if (state === 'idle') print();
+  }
+  btn.addEventListener('click', e => { e.stopPropagation(); userAction(); });
+  paper.addEventListener('click', userAction);
+
+  sizeZig(); measure();
+  if (reduce) { totalEl.textContent = '$42.48'; lines.forEach(l => l.classList.add('on')); setY(H); state = 'done'; btn.textContent = 'Tear';
+    tear = () => { state = 'done'; }; }
+  else { setY(0); requestAnimationFrame(loop); print(); }
+  addEventListener('resize', () => { sizeZig(); measure(); if (state === 'done') { y = target = H; setY(H); } });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<!-- pi-canvas goodie: Siri Wave. Original implementation. Inspired by Reacticx siri-ios-27 / spectral-wave (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice Wave</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; }
+  html, body { margin: 0; height: 100%; background: #060609; overflow: hidden; }
+  body { position: relative; font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; user-select: none; cursor: pointer; touch-action: none; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .top { position: absolute; top: clamp(12px, 9%, 34px); left: 0; right: 0; display: flex; justify-content: center; }
+  .state { font-size: 12px; font-weight: 500; letter-spacing: .02em; color: rgba(255,255,255,.55); display: flex; align-items: center; gap: 7px; transition: color .3s; }
+  .state svg { width: 13px; height: 13px; }
+  .live .state { color: rgba(255,255,255,.85); }
+  .say { position: absolute; left: 0; right: 0; bottom: clamp(14px, 11%, 44px); text-align: center; padding: 0 20px; }
+  .q { font-size: clamp(14px, 3.6vw, 19px); font-weight: 600; letter-spacing: -.015em; line-height: 1.35; min-height: 1.35em; text-wrap: balance; }
+  .q span { opacity: 0; filter: blur(6px); display: inline-block; transform: translateY(4px); transition: opacity .35s, filter .35s, transform .35s; }
+  .q span.in { opacity: 1; filter: none; transform: none; }
+  .a { margin-top: 8px; display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px 6px 8px; border-radius: 999px; font-size: 12px; color: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .4s, transform .4s; }
+  .a.in { opacity: 1; transform: none; }
+  .a i { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe28a, #ffb02e 60%, #ff8a00); box-shadow: 0 0 10px rgba(255, 176, 46, .6); }
+  @media (max-height: 260px) { .say { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="top"><div class="state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span id="st">Listening…</span></div></div>
+<div class="say" aria-live="polite"><div class="q" id="q"></div><div class="a" id="a"><i></i><span id="at"></span></div></div>
+<script>
+(() => {
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  const COLORS = ['255,55,125', '45,205,255', '130,95,255', '70,255,190'];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  // each ribbon = 3 gaussian-enveloped sine lobes that wander
+  const ribbons = COLORS.map(c => ({ c, lobes: [0, 1, 2].map(() => newLobe({})) }));
+  function newLobe(l) {
+    l.o = rnd(-.55, .55); l.w = rnd(.18, .38); l.f = rnd(5, 11); l.s = rnd(2, 4.5) * (Math.random() < .5 ? -1 : 1);
+    l.ta = rnd(.35, 1); l.a = l.a === undefined ? l.ta : l.a; l.ph = l.ph || rnd(0, 6); l.life = rnd(1.2, 2.6); return l;
+  }
+  let W, H, level = 0, target = .9, last = performance.now(), held = false, user = false;
+
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (W !== w || H !== h) { W = w; H = h; cv.width = w * DPR; cv.height = h * DPR; }
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const tgt = user ? (held ? .95 + .25 * Math.sin(now / 90) * Math.sin(now / 230) : .06) : target;
+    level = reduce ? (user ? (held ? .9 : .06) : .7) : level + (tgt - level) * Math.min(1, dt * 6);
+    const mid = H * .44, amp = Math.min(H * .21, 100), x0 = W * .06, xw = W * .88;
+
+    // soft glow behind the wave
+    const g = ctx.createRadialGradient(W / 2, mid, 0, W / 2, mid, W * .45);
+    g.addColorStop(0, `rgba(110,90,255,${.1 + level * .14})`); g.addColorStop(1, 'rgba(110,90,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    // core line
+    const lg = ctx.createLinearGradient(x0, 0, x0 + xw, 0);
+    lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.5, 'rgba(255,255,255,.75)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = lg; ctx.fillRect(x0, mid - .5, xw, 1);
+
+    ctx.globalCompositeOperation = 'lighter';
+    const STEPS = 140;
+    ribbons.forEach(rb => {
+      rb.lobes.forEach(l => {
+        l.ph += l.s * dt; l.life -= dt;
+        if (l.life <= 0) { l.ta = 0; if (l.a < .03) newLobe(l); }
+        l.a += (l.ta - l.a) * Math.min(1, dt * 3);
+      });
+      const Y = new Float32Array(STEPS + 1);
+      for (let i = 0; i <= STEPS; i++) {
+        const x = i / STEPS * 2 - 1, taper = Math.pow(1 - x * x, 2);
+        let y = 0;
+        for (const l of rb.lobes) { const d = (x - l.o) / l.w; y += l.a * Math.exp(-d * d) * Math.abs(Math.sin(l.f * x + l.ph)); }
+        Y[i] = Math.min(1.1, y) * taper * amp * level;
+      }
+      const fill = ctx.createLinearGradient(0, mid - amp, 0, mid + amp);
+      fill.addColorStop(0, `rgba(${rb.c},.85)`); fill.addColorStop(.5, `rgba(${rb.c},.35)`); fill.addColorStop(1, `rgba(${rb.c},.85)`);
+      ctx.beginPath();
+      for (let i = 0; i <= STEPS; i++) ctx.lineTo(x0 + i / STEPS * xw, mid - Y[i]);
+      for (let i = STEPS; i >= 0; i--) ctx.lineTo(x0 + i / STEPS * xw, mid + Y[i] * .92);
+      ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+      ctx.strokeStyle = `rgba(${rb.c},.9)`; ctx.lineWidth = 1; ctx.stroke();
+    });
+    ctx.globalCompositeOperation = 'source-over';
+    if (!reduce) requestAnimationFrame(frame);
+  }
+
+  // scripted demo: transcript types in word by word while "speaking"
+  const SCRIPT = [
+    ['What’s the weather like in Lisbon tomorrow morning?', 'Sunny, 22° · light breeze from the west'],
+    ['Remind me to call Ana when I get to the office', 'Reminder set · when you arrive at Work'],
+    ['Play something calm for focusing', 'Now playing · Deep Focus, Vol. 3'],
+  ];
+  const q = document.getElementById('q'), a = document.getElementById('a'), at = document.getElementById('at'), st = document.getElementById('st');
+  let si = 0, timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  function play() {
+    if (user) return;
+    const [text, ans] = SCRIPT[si++ % SCRIPT.length];
+    a.classList.remove('in'); st.textContent = 'Listening…'; document.body.classList.add('live');
+    q.innerHTML = text.split(' ').map(w => `<span>${w}</span>`).join(' ');
+    const spans = [...q.children];
+    target = .9;
+    spans.forEach((s, i) => later(() => s.classList.add('in'), reduce ? 0 : 200 + i * 190));
+    const end = reduce ? 0 : 400 + spans.length * 190;
+    later(() => { target = .28; st.textContent = 'Thinking…'; }, end);
+    later(() => { target = .12; at.textContent = ans; a.classList.add('in'); document.body.classList.remove('live'); st.textContent = 'Done'; }, end + 900);
+    if (!reduce) later(play, end + 3400);
+  }
+  play();
+
+  function takeOver() {
+    if (user) return; user = true; timers.forEach(clearTimeout);
+    q.innerHTML = '<span class="in">Hold anywhere to talk</span>'; a.classList.remove('in'); st.textContent = 'Ready';
+  }
+  const down = () => { takeOver(); held = true; st.textContent = 'Listening…'; document.body.classList.add('live'); if (reduce) frame(performance.now()); };
+  const up = () => { if (!held) return; held = false; st.textContent = 'Ready'; document.body.classList.remove('live'); if (reduce) frame(performance.now()); };
+  addEventListener('pointerdown', down); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  addEventListener('keydown', e => { if (e.key === ' ' && !e.repeat) { e.preventDefault(); down(); } });
+  addEventListener('keyup', e => { if (e.key === ' ') up(); });
+  if (reduce) { level = .7; frame(performance.now()); addEventListener('resize', () => frame(performance.now())); }
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

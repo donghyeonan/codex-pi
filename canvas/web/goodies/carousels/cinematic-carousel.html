@@ -1,0 +1,144 @@
+<!doctype html>
+<!-- pi-canvas goodie: Cinematic Carousel. Original implementation. Inspired by Reacticx cinematic-carousel (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cinematic Carousel</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; }
+  html, body { margin: 0; height: 100%; background: #09090b; overflow: hidden; }
+  body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; user-select: none; }
+  .glow { position: absolute; inset: 0; transition: background 1s ease; pointer-events: none; }
+  .stage { position: absolute; inset: 0; overflow: hidden; perspective: 1100px; perspective-origin: 50% calc(50% - 17px); touch-action: pan-y; cursor: grab; }
+  .stage.drag { cursor: grabbing; }
+  .stage:focus { outline: none; }
+  .card { position: absolute; left: 50%; top: calc(50% - 17px); height: min(78% - 27px, 250px); aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden;
+    will-change: transform, filter; box-shadow: 0 24px 50px -12px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.08) inset; background: #111; }
+  .art { position: absolute; inset: 0; background: var(--bg); }
+  .art::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.82) 100%), radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.12), transparent 60%); }
+  .stars { background-image: radial-gradient(circle, rgba(255,255,255,.9) 0 .7px, transparent 1.2px), radial-gradient(circle, rgba(255,255,255,.5) 0 .6px, transparent 1px);
+    background-size: 37px 41px, 23px 29px; background-position: 3px 7px, 11px 2px; position: absolute; inset: 0 0 66%; opacity: .7; -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
+  .info { position: absolute; left: 14px; right: 14px; bottom: 13px; }
+  .chip { display: inline-block; font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px;
+    background: rgba(255,255,255,.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .card h3 { margin: 7px 0 4px; font-size: clamp(15px, 3.4vh, 20px); line-height: 1.05; letter-spacing: -.02em; font-weight: 700; }
+  .meta { font-size: 11px; color: rgba(255,255,255,.7); display: flex; gap: 6px; align-items: center; }
+  .meta b { color: #ffd166; font-weight: 600; }
+  .nav { position: absolute; top: calc(50% - 17px); transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: 0; display: grid; place-items: center;
+    color: #fff; background: rgba(255,255,255,.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    cursor: pointer; z-index: 200; transition: background .2s, transform .2s; }
+  .nav:hover { background: rgba(255,255,255,.2); }
+  .nav:active { transform: translateY(-50%) scale(.92); }
+  .nav:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .prev { left: 14px; } .next { right: 14px; }
+  .dots { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 6px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.28); transition: width .35s cubic-bezier(.2,.8,.2,1), background .35s; cursor: pointer; }
+  .dots i.on { width: 20px; background: #fff; }
+</style>
+</head>
+<body>
+<div class="glow" id="glow"></div>
+<div class="stage" id="stage" role="region" aria-roledescription="carousel" aria-label="Featured films" tabindex="0"></div>
+<button class="nav prev" id="prev" aria-label="Previous"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+<button class="nav next" id="next" aria-label="Next"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+<div class="dots" id="dots"></div>
+<script>
+(() => {
+  const FILMS = [
+    { t: 'Low Orbit', g: 'Sci‑Fi', y: 2026, d: '2h 14m', r: '8.4', c: '#3d63ff', stars: 1,
+      bg: 'radial-gradient(ellipse 60% 22.5% at 42% 0%, transparent 62%, rgba(255,214,170,.9) 66%, transparent 74%) 0 100%/100% 40% no-repeat, radial-gradient(circle at 36% 55%, #8fc0ff, #2a49c9 12%, #0d1650 22%, transparent 22.5%), radial-gradient(ellipse 60% 9% at 42% 60%, transparent 62%, rgba(255,214,170,.55) 66%, transparent 74%), radial-gradient(circle at 76% 22%, #ffe6c4 0 3.5%, transparent 4%), linear-gradient(#03050f, #0e1a46 70%, #1b2b6b)' },
+    { t: 'Tidewater', g: 'Drama', y: 2025, d: '1h 58m', r: '7.9', c: '#16a3a8',
+      bg: 'repeating-linear-gradient(transparent 0 7px, rgba(255,255,255,.07) 7px 8px) 0 100%/100% 48% no-repeat, radial-gradient(circle at 50% 50%, #fff6dc 0 8%, rgba(255,220,160,.55) 9%, transparent 32%), linear-gradient(transparent 52%, #0f6f7a 52%, #05313d), linear-gradient(#f6c08e, #ec8f7e 52%)' },
+    { t: 'Afterglow', g: 'Romance', y: 2026, d: '1h 46m', r: '8.1', c: '#ff5a7a',
+      bg: 'linear-gradient(transparent 72%, #1c0a22 72%), repeating-linear-gradient(transparent 0 7px, #9b2a63 7px 10px) 0 64%/100% 9% no-repeat, radial-gradient(circle at 50% 66%, #ffe07a 0 21%, #ff9d4d 21.5%, transparent 22%), linear-gradient(#24103a, #9b2a63 55%, #ff7b4c 80%)' },
+    { t: 'Northern Line', g: 'Thriller', y: 2024, d: '2h 02m', r: '7.6', c: '#ff2f5b',
+      bg: 'radial-gradient(circle at 60% 38%, rgba(255,40,80,.55), transparent 45%), repeating-linear-gradient(115deg, transparent 0 20px, rgba(255,70,100,.4) 20px 21.5px), linear-gradient(160deg, #0a0a12, #220c18)' },
+    { t: 'Salt & Ember', g: 'Adventure', y: 2025, d: '2h 27m', r: '8.7', c: '#f08a3a',
+      bg: 'radial-gradient(ellipse 80% 34% at 18% 100%, #9c3a17 98%, transparent 100%), radial-gradient(ellipse 75% 30% at 90% 94%, #c75a22 98%, transparent 100%), radial-gradient(ellipse 120% 36% at 45% 84%, #eb9246 98%, transparent 100%), radial-gradient(circle at 70% 30%, #fff1c9 0 7%, transparent 7.5%), linear-gradient(#ffe2b3, #f6ad62)' },
+    { t: 'The Quiet Hour', g: 'Mystery', y: 2026, d: '1h 51m', r: '8.0', c: '#5fa38e',
+      bg: 'radial-gradient(ellipse 70% 28% at 25% 96%, #14231f 98%, transparent 100%), radial-gradient(ellipse 65% 24% at 85% 86%, #223a34 98%, transparent 100%), radial-gradient(ellipse 100% 30% at 50% 76%, #3e5f55 98%, transparent 100%), radial-gradient(circle at 32% 28%, #f2f4ec 0 6%, rgba(242,244,236,.25) 7%, transparent 20%), linear-gradient(#8ea8a0, #d6e0d8 75%)' },
+  ];
+  const N = FILMS.length;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stage = document.getElementById('stage'), dots = document.getElementById('dots'), glow = document.getElementById('glow');
+  const cards = FILMS.map((f, i) => {
+    const el = document.createElement('article');
+    el.className = 'card'; el.setAttribute('aria-label', `${f.t}, ${f.g}, ${f.y}`);
+    el.innerHTML = `<div class="art" style="--bg:${f.bg}">${f.stars ? '<div class="stars"></div>' : ''}</div>
+      <div class="info"><span class="chip">${f.g}</span><h3>${f.t}</h3><div class="meta"><span>${f.y}</span>·<span>${f.d}</span>·<b>★ ${f.r}</b></div></div>`;
+    el.addEventListener('click', () => { if (!moved) { stop(); go(Math.round(target) + wrap(i - target)); } });
+    stage.appendChild(el);
+    const d = document.createElement('i'); d.onclick = () => { stop(); go(Math.round(target) + wrap(i - target)); }; dots.appendChild(d);
+    return el;
+  });
+  const wrap = r => { r = ((r % N) + N) % N; return r > N / 2 ? r - N : r; };
+  let pos = 0, target = 0, vel = 0, drag = null, moved = false, active = -1, user = false;
+
+  function render() {
+    const W = stage.clientWidth, sp = Math.min(W * .27, 175);
+    cards.forEach((el, i) => {
+      const rel = wrap(i - pos), a = Math.abs(rel), s = Math.sign(rel);
+      const x = s * sp * (a <= 1 ? a : 1 + (a - 1) * .72);
+      const sc = 1 - .16 * Math.min(a, 2.3);
+      const op = a > 2.2 ? Math.max(0, 1 - (a - 2.2) / .5) : 1;
+      el.style.transform = `translate(-50%,-50%) translateX(${x}px) translateZ(${-a * 60}px) rotateY(${-Math.max(-1.5, Math.min(1.5, rel)) * 9}deg) scale(${sc})`;
+      el.style.filter = a < .02 ? 'none' : `blur(${Math.min(a, 2) * 2.6}px) brightness(${1 - .3 * Math.min(a, 2)}) saturate(${1 - .2 * Math.min(a, 1)})`;
+      el.style.opacity = op;
+      el.style.zIndex = 100 - Math.round(a * 10);
+    });
+    const ai = ((Math.round(pos) % N) + N) % N;
+    if (ai !== active) {
+      active = ai;
+      [...dots.children].forEach((d, k) => d.classList.toggle('on', k === ai));
+      const c = FILMS[ai].c;
+      glow.style.background = `radial-gradient(60% 75% at 50% 55%, ${c}38, transparent 70%), radial-gradient(40% 30% at 50% 100%, ${c}22, transparent)`;
+    }
+  }
+  function tick() {
+    if (!drag) {
+      // spring toward target
+      const f = (target - pos) * .14; vel = vel * .62 + f; pos += vel;
+      if (Math.abs(target - pos) < .0005 && Math.abs(vel) < .0005) { pos = target; vel = 0; }
+    }
+    render();
+    requestAnimationFrame(tick);
+  }
+  const go = t => { target = t; if (reduce) { pos = t; render(); } };
+  let timer = reduce ? 0 : setInterval(() => go(Math.round(target) + 1), 2800);
+  function stop() { user = true; clearInterval(timer); }
+
+  stage.addEventListener('pointerdown', e => {
+    stop(); moved = false;
+    drag = { x: e.clientX, p: pos, lx: e.clientX, lt: performance.now(), v: 0 };
+    stage.setPointerCapture(e.pointerId); stage.classList.add('drag');
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const sp = Math.min(stage.clientWidth * .27, 175), now = performance.now();
+    if (Math.abs(e.clientX - drag.x) > 4) moved = true;
+    pos = drag.p - (e.clientX - drag.x) / sp;
+    drag.v = -(e.clientX - drag.lx) / sp / Math.max(1, now - drag.lt) * 16; drag.lx = e.clientX; drag.lt = now;
+    if (reduce) render();
+  });
+  const end = () => {
+    if (!drag) return;
+    target = Math.round(pos + drag.v * 6); vel = 0; drag = null; stage.classList.remove('drag');
+    if (reduce) { pos = target; render(); }
+    setTimeout(() => moved = false, 0);
+  };
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  document.getElementById('prev').onclick = () => { stop(); go(Math.round(target) - 1); };
+  document.getElementById('next').onclick = () => { stop(); go(Math.round(target) + 1); };
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') { stop(); go(Math.round(target) - 1); }
+    if (e.key === 'ArrowRight') { stop(); go(Math.round(target) + 1); }
+  });
+  addEventListener('wheel', e => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 8) { stop(); clearTimeout(tick.w); tick.w = setTimeout(() => go(Math.round(target) + Math.sign(e.deltaX)), 30); } }, { passive: true });
+  render();
+  if (reduce) addEventListener('resize', render); else requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

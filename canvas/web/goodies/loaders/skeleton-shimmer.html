@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- pi-canvas goodie: Skeleton Shimmer. Original implementation. Inspired by Reacticx Shimmer (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skeleton Shimmer</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:#0a0a0b;color:#ededf1;overflow:hidden;display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .card{position:relative;width:min(330px,calc(100vw - 32px));border-radius:18px;background:#111114;border:1px solid #1f1f25;
+    box-shadow:0 30px 60px -30px #000,inset 0 1px 0 #ffffff08;cursor:pointer;outline:none;overflow:hidden}
+  .layer{padding:16px;display:flex;flex-direction:column;gap:12px;transition:opacity .45s ease}
+  .skel{position:absolute;inset:0}
+  .hd{display:flex;align-items:center;gap:10px;height:40px}
+  .av{width:40px;height:40px;border-radius:50%;flex:none}
+  .lines{flex:1;display:flex;flex-direction:column;gap:7px}
+  .media{height:clamp(80px,31vh,114px);border-radius:12px}
+  .txt{display:flex;flex-direction:column;gap:7px;min-height:58px}
+  .ft{display:flex;gap:10px;height:22px;align-items:center}
+  .b{border-radius:6px;background:linear-gradient(100deg,#19191e 42%,#2a2a31 50%,#19191e 58%) #19191e;background-size:300vw 100%;
+    background-attachment:fixed;animation:sh 1.5s linear infinite}
+  @keyframes sh{from{background-position:150vw 0}to{background-position:-150vw 0}}
+  .real .in{opacity:0;filter:blur(6px);transform:translateY(6px);transition:opacity .5s ease,filter .5s ease,transform .6s cubic-bezier(.16,1,.3,1)}
+  .card.loaded .real .in{opacity:1;filter:none;transform:none}
+  .card.loaded .skel{opacity:0}
+  .card:not(.loaded) .real .in{transition-delay:0s!important;transition-duration:.25s}
+  .avr{display:grid;place-items:center;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f472b6,#8b5cf6)}
+  .nm{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .mt{font-size:12px;color:#7d7d88}
+  .more{margin-left:auto;color:#5d5d68;font-size:18px;letter-spacing:1px}
+  .ph{position:relative;overflow:hidden;background:linear-gradient(180deg,#1e1b4b 0%,#7c3aed 45%,#f472b6 75%,#fdba74 100%)}
+  .ph svg{position:absolute;inset:auto 0 0 0;width:100%;height:65%}
+  .ph .sun{position:absolute;left:62%;top:38%;width:34px;height:34px;border-radius:50%;background:#fff7ed;box-shadow:0 0 40px 12px #fdba7499}
+  .ph .tag{position:absolute;left:10px;top:10px;font-size:11px;padding:3px 8px;border-radius:999px;background:#0008;color:#fff;backdrop-filter:blur(6px)}
+  .av.b{border-radius:50%}
+  .txt.tx{display:block;font-size:13.5px;line-height:1.45;color:#cfcfd6}
+  .tx b{color:#fff;font-weight:600}
+  .act{display:flex;align-items:center;gap:5px;font-size:12px;color:#8d8d98}
+  .act svg{width:15px;height:15px}
+  .act.like{color:#fb7185}
+  @media (prefers-reduced-motion:reduce){.b{animation:none}.real .in{transition:none}}
+</style></head>
+<body>
+<div class="card" id="card" tabindex="0" role="article" aria-busy="true" aria-label="Post by Maya Chen">
+  <div class="layer skel" aria-hidden="true">
+    <div class="hd"><div class="av b"></div><div class="lines"><div class="b" style="width:46%;height:11px"></div><div class="b" style="width:30%;height:9px"></div></div></div>
+    <div class="media b"></div>
+    <div class="txt"><div class="b" style="height:10px"></div><div class="b" style="height:10px;width:92%"></div><div class="b" style="height:10px;width:58%"></div></div>
+    <div class="ft"><div class="b" style="width:44px;height:12px"></div><div class="b" style="width:38px;height:12px"></div><div class="b" style="width:30px;height:12px;margin-left:auto"></div></div>
+  </div>
+  <div class="layer real">
+    <div class="hd in" style="transition-delay:.05s"><div class="av avr">MC</div><div><div class="nm">Maya Chen</div><div class="mt">Product Designer · 2h</div></div><div class="more">···</div></div>
+    <div class="media ph in" style="transition-delay:.13s"><div class="sun"></div><span class="tag">onboarding-v3.fig</span>
+      <svg viewBox="0 0 300 80" preserveAspectRatio="none"><path d="M0 50 L50 22 L92 46 L140 14 L196 50 L238 30 L300 52 V80 H0Z" fill="#3b0764" opacity=".75"/><path d="M0 62 L60 40 L118 64 L170 38 L230 66 L300 46 V80 H0Z" fill="#1e1036"/></svg></div>
+    <div class="txt in tx" style="transition-delay:.21s">Shipped the new onboarding flow today — <b>38% faster</b> to a first project. Huge thanks to everyone who tested the early builds.</div>
+    <div class="ft in" style="transition-delay:.29s">
+      <span class="act like"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.2C1.2 8.6 3.2 5 6.7 5c2 0 3.5 1.1 4.3 2.5h2C13.8 6.1 15.3 5 17.3 5c3.5 0 5.5 3.6 4.2 6.8C19.5 16.4 12 21 12 21z"/></svg>248</span>
+      <span class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>32</span>
+      <span class="act" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 14v6h14v-6"/></svg>Share</span>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const card = document.getElementById('card');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = () => { card.style.transform = ''; const k = Math.min(1, (innerHeight - 16) / card.offsetHeight); card.style.transform = k < 1 ? `scale(${k.toFixed(3)})` : ''; };
+  fit(); addEventListener('resize', fit);
+  let loaded = false, timer, auto = true;
+  const set = v => { loaded = v; card.classList.toggle('loaded', v); card.setAttribute('aria-busy', String(!v)); };
+  const cycle = () => {
+    clearTimeout(timer); if (!auto) return;
+    timer = setTimeout(() => { set(!loaded); cycle(); }, loaded ? 3400 : 2200);
+  };
+  if (reduce) { set(true); }
+  else cycle();
+  const toggle = () => { auto = false; clearTimeout(timer); set(!loaded); };
+  card.addEventListener('click', toggle);
+  addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'r') { e.preventDefault(); toggle(); } });
+})();
+</script>
+</body></html>

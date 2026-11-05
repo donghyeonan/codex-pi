@@ -1,0 +1,167 @@
+<!doctype html>
+<!-- pi-canvas goodie: Event Ticket. Original implementation. Inspired by Reacticx event-ticket-card (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Event Ticket</title>
+<style>
+  :root { --mx: 30%; --my: 40%; --rx: 0deg; --ry: 0deg; --hue: 0deg; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0a0a0b;
+    background-image: radial-gradient(70% 60% at 50% 50%, #161a26 0%, transparent 75%);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; color: #121521;
+  }
+  .scene { perspective: 1000px; width: 392px; flex: none; transform: scale(var(--s, 1)); }
+  .lift { transform: rotateX(var(--rx)) rotateY(var(--ry)); transform-style: preserve-3d; filter: drop-shadow(0 22px 28px rgba(0,0,0,.55)) drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+  .ticket { display: flex; height: 196px; cursor: pointer; outline: none; }
+  .part { position: relative; overflow: hidden; background: #f6f4ee; }
+  .main {
+    flex: 1; border-radius: 16px 0 0 16px; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between;
+    -webkit-mask: radial-gradient(circle at 100% 0, transparent 11px, #000 11.5px) top/100% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 11px, #000 11.5px) bottom/100% 51% no-repeat;
+    mask: radial-gradient(circle at 100% 0, transparent 11px, #000 11.5px) top/100% 51% no-repeat, radial-gradient(circle at 100% 100%, transparent 11px, #000 11.5px) bottom/100% 51% no-repeat;
+  }
+  .stub {
+    width: 108px; border-radius: 0 16px 16px 0; padding: 16px 14px 14px 16px; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: space-between; transition: transform .7s cubic-bezier(.3, 1.6, .5, 1);
+    -webkit-mask: radial-gradient(circle at 0 0, transparent 11px, #000 11.5px) top/100% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 11px, #000 11.5px) bottom/100% 51% no-repeat;
+    mask: radial-gradient(circle at 0 0, transparent 11px, #000 11.5px) top/100% 51% no-repeat, radial-gradient(circle at 0 100%, transparent 11px, #000 11.5px) bottom/100% 51% no-repeat;
+    background-image: linear-gradient(#cfcabe 50%, transparent 50%); background-size: 1.5px 9px; background-repeat: repeat-y; background-position: 0 14px;
+    background-color: #f6f4ee;
+  }
+  .ticket.torn .stub { transform: translate(18px, 6px) rotate(5deg); }
+  /* moving sheen across the paper */
+  .part::after {
+    content: ""; position: absolute; inset: -40%; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
+    background: linear-gradient(110deg, transparent 38%, rgba(255, 170, 230, .5) 45%, rgba(140, 220, 255, .55) 50%, rgba(255, 240, 150, .5) 55%, transparent 62%);
+    transform: translateX(var(--sx, -60%));
+  }
+  .row { display: flex; align-items: center; justify-content: space-between; }
+  .air { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12.5px; letter-spacing: .01em; }
+  .logo { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, #3d5afe, #00bfa5); display: grid; place-items: center; }
+  .cls { font-size: 9.5px; font-weight: 700; letter-spacing: .16em; color: #3d5afe; background: rgba(61, 90, 254, .1); padding: 4px 7px; border-radius: 6px; }
+  .route { display: flex; align-items: center; gap: 10px; }
+  .city b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+  .city span { display: block; margin-top: 3px; font-size: 10px; line-height: 1.35; color: #6c6f7d; }
+  .dur { position: absolute; left: 0; right: 0; bottom: -12px; text-align: center; font-size: 9px; font-weight: 600; color: #8d909c; letter-spacing: .04em; }
+  .city.r { text-align: right; }
+  .path { flex: 1; position: relative; height: 30px; margin-top: -14px; }
+  .path svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .path .plane { position: absolute; inset: auto; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+  .grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 8px; }
+  .k { font-size: 8.5px; font-weight: 600; letter-spacing: .14em; color: #8d909c; text-transform: uppercase; }
+  .v { font-size: 12.5px; font-weight: 700; margin-top: 3px; white-space: nowrap; }
+  .seat b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+  .foil {
+    position: absolute; top: 16px; right: 14px; width: 26px; height: 26px; border-radius: 50%;
+    background: conic-gradient(from var(--hue), #ff9ad5, #9ad8ff, #b6ffb0, #fff59a, #ffb08a, #ff9ad5);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.08), inset 0 0 6px rgba(255,255,255,.9);
+  }
+  .foil::after { content: "★"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: rgba(255,255,255,.85); mix-blend-mode: overlay; }
+  .bar { width: 100%; height: 44px; display: block; }
+  .code { font: 600 8px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .12em; color: #6c6f7d; margin-top: 4px; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { .stub { transition: none; } }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="lift">
+      <div class="ticket" id="ticket" tabindex="0" role="button" aria-label="Boarding pass, press to tear stub">
+        <div class="part main">
+          <div class="row">
+            <div class="air"><span class="logo"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 8.5 11 2 6.5 11 5.6 7.4z" fill="#fff"/></svg></span>Aurora Air</div>
+            <span class="cls">BUSINESS</span>
+          </div>
+          <div class="route">
+            <div class="city"><b>SFO</b><span>San Francisco<br>09:40</span></div>
+            <div class="path">
+              <svg viewBox="0 0 100 34" preserveAspectRatio="none"><path id="arc" d="M2 30 Q50 -6 98 30" fill="none" stroke="#b9b6c2" stroke-width="1.3" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>
+              <svg class="plane" id="plane" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="#3d5afe"/></svg>
+              <span class="dur">11h 15m</span>
+            </div>
+            <div class="city r"><b>NRT</b><span>Tokyo<br>13:55 +1</span></div>
+          </div>
+          <div class="grid">
+            <div><div class="k">Passenger</div><div class="v">Maya Okafor</div></div>
+            <div><div class="k">Flight</div><div class="v">AU 207</div></div>
+            <div><div class="k">Gate</div><div class="v">G14</div></div>
+            <div><div class="k">Boards</div><div class="v">09:05</div></div>
+          </div>
+        </div>
+        <div class="part stub" id="stub">
+          <div class="foil"></div>
+          <div class="seat"><div class="k">Seat</div><b>2A</b><div class="k" style="margin-top:6px">Group 1</div></div>
+          <div><svg class="bar" id="bar" viewBox="0 0 78 44" preserveAspectRatio="none"></svg><div class="code">AU207·2A·0914</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+(() => {
+  const ticket = document.getElementById('ticket');
+  const plane = document.getElementById('plane');
+  const arc = document.getElementById('arc');
+  const css = document.documentElement.style;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  (function fit() {
+    const el = document.querySelector('.scene');
+    const f = () => el.style.setProperty('--s', Math.min(1, (innerWidth - 24) / 392, (innerHeight - 24) / 220).toFixed(3));
+    addEventListener('resize', f); f();
+  })();
+  // deterministic barcode from the booking string
+  (function barcode() {
+    let seed = 0; for (const c of 'AU207-OKAFOR-2A') seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+    const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+    let x = 0, out = '';
+    while (x < 78) {
+      const w = [0.8, 1.2, 1.8, 2.6][Math.floor(rnd() * 4)];
+      out += `<rect x="${x.toFixed(2)}" width="${w}" height="44" fill="#14161f"/>`;
+      x += w + [0.8, 1.2, 1.8][Math.floor(rnd() * 3)];
+    }
+    document.getElementById('bar').innerHTML = out;
+  })();
+
+  // plane follows the dashed arc
+  function placePlane(p) {
+    const box = plane.parentNode.getBoundingClientRect();
+    const len = arc.getTotalLength();
+    const a = arc.getPointAtLength(p * len), b = arc.getPointAtLength(Math.min(len, p * len + 0.5));
+    const sx = box.width / 100, sy = box.height / 34;
+    const ang = Math.atan2((b.y - a.y) * sy, (b.x - a.x) * sx) * 180 / Math.PI + 90;
+    plane.style.transform = `translate(${a.x * sx}px, ${a.y * sy}px) rotate(${ang}deg)`;
+  }
+
+  let auto = !reduce, rx = 0, ry = 0, trx = 0, try_ = 0, t0 = performance.now();
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    const p = (t * 0.2) % 1;
+    placePlane(0.06 + p * 0.88);
+    plane.style.opacity = Math.min(1, Math.min(p, 1 - p) * 10).toFixed(2);
+    css.setProperty('--sx', (((t * 0.35) % 1.6) * 100 - 80).toFixed(1) + '%');
+    if (auto) { trx = Math.sin(t * 0.8) * 4; try_ = Math.sin(t * 0.6) * 7; css.setProperty('--hue', (t * 60 % 360) + 'deg'); }
+    rx += (trx - rx) * 0.1; ry += (try_ - ry) * 0.1;
+    css.setProperty('--rx', rx.toFixed(2) + 'deg'); css.setProperty('--ry', ry.toFixed(2) + 'deg');
+    requestAnimationFrame(frame);
+  }
+  function stopAuto() { auto = false; }
+
+  ticket.addEventListener('pointermove', e => {
+    const r = ticket.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5;
+    stopAuto(); trx = -py * 12; try_ = px * 14;
+    css.setProperty('--hue', (px * 360 + py * 120).toFixed(0) + 'deg');
+  });
+  ticket.addEventListener('pointerleave', () => { trx = 0; try_ = 0; });
+  const tear = () => { stopAuto(); ticket.classList.toggle('torn'); };
+  ticket.addEventListener('click', tear);
+  ticket.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tear(); } });
+
+  if (reduce) { placePlane(0.5); css.setProperty('--sx', '-10%'); css.setProperty('--hue', '40deg'); }
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

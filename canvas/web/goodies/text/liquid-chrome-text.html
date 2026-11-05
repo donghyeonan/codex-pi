@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- pi-canvas goodie: Liquid Chrome Text. Original implementation. Inspired by Reacticx liquid-chrome-text (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liquid Chrome Text</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(80% 70% at 50% 40%,#1a1c22 0%,#0a0a0b 70%);overflow:hidden;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  svg{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:default}
+  text{font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;font-weight:900;letter-spacing:-5px}
+  .cap{position:fixed;left:0;right:0;bottom:12px;text-align:center;font-size:12px;color:#5c5f69;letter-spacing:.04em;pointer-events:none}
+</style></head>
+<body>
+<svg viewBox="0 0 560 240" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chrome">
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfcfd"/><stop offset=".22" stop-color="#d5dbe3"/>
+      <stop offset=".46" stop-color="#6b7581"/><stop offset=".5" stop-color="#1b1f26"/>
+      <stop offset=".55" stop-color="#4a525d"/><stop offset=".72" stop-color="#e8edf2"/>
+      <stop offset=".86" stop-color="#ffffff"/><stop offset="1" stop-color="#8f99a6"/>
+    </linearGradient>
+    <linearGradient id="sheen" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="140" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".0"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset=".56" stop-color="#bfe3ff" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="tint" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7dd3fc" stop-opacity=".22"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#f0abfc" stop-opacity=".2"/>
+    </linearGradient>
+    <filter id="liquid" x="-8%" y="-25%" width="116%" height="150%" color-interpolation-filters="sRGB">
+      <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.011 0.026" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap id="disp" in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="2.4" result="b"/>
+      <feSpecularLighting in="b" surfaceScale="7" specularConstant="1.15" specularExponent="26" lighting-color="#ffffff" result="s">
+        <fePointLight id="light" x="150" y="-40" z="140"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="d" operator="in" result="si"/>
+      <feComposite in="d" in2="si" operator="arithmetic" k2="1" k3=".9" result="lit"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity=".6"/>
+    </filter>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="refl" maskContentUnits="userSpaceOnUse"><rect x="0" y="148" width="560" height="92" fill="url(#fade)"/></mask>
+  </defs>
+  <g id="word" filter="url(#liquid)">
+    <text x="280" y="146" text-anchor="middle" font-size="104" fill="url(#chrome)">CHROME</text>
+    <text x="280" y="146" text-anchor="middle" font-size="104" fill="url(#tint)">CHROME</text>
+    <text id="sh" x="280" y="146" text-anchor="middle" font-size="104" fill="url(#sheen)">CHROME</text>
+  </g>
+  <g mask="url(#refl)"><use href="#word" transform="translate(0 298) scale(1 -1)"/></g>
+</svg>
+<div class="cap">Move the pointer to steer the light</div>
+<script>
+(() => {
+  const turb = document.getElementById('turb'), disp = document.getElementById('disp');
+  const light = document.getElementById('light'), sheen = document.getElementById('sheen');
+  const svg = document.querySelector('svg');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lx = 150, ly = -40, tx = 150, ty = -40, auto = true, last = performance.now(), t = 0, sx = -160;
+  const apply = () => {
+    light.setAttribute('x', lx.toFixed(1)); light.setAttribute('y', ly.toFixed(1));
+    sheen.setAttribute('gradientTransform', `translate(${sx.toFixed(1)} 0) skewX(-20)`);
+  };
+  if (reduce) { disp.setAttribute('scale', '4'); sx = 220; apply(); return; }
+  const toLocal = e => {
+    const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    return p.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  svg.addEventListener('pointermove', e => { if (!e.movementX && !e.movementY) return; auto = false; const p = toLocal(e); tx = p.x; ty = p.y - 120; });
+  svg.addEventListener('pointerleave', () => { ty = -40; });
+  const loop = now => {
+    const dt = Math.min(50, now - last) / 1000; last = now; t += dt;
+    if (auto) { tx = 280 + Math.sin(t * 0.7) * 260; ty = -50 + Math.cos(t * 0.5) * 30; }
+    lx += (tx - lx) * Math.min(1, dt * 4); ly += (ty - ly) * Math.min(1, dt * 4);
+    // liquid surface: slowly breathing turbulence + displacement
+    const f1 = 0.011 + Math.sin(t * 0.6) * 0.0022, f2 = 0.026 + Math.cos(t * 0.45) * 0.005;
+    turb.setAttribute('baseFrequency', `${f1.toFixed(5)} ${f2.toFixed(5)}`);
+    disp.setAttribute('scale', (6.5 + Math.sin(t * 1.1) * 3).toFixed(2));
+    sx = auto ? ((t * 170) % 900) - 220 : lx - 70;
+    apply();
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
+</body></html>

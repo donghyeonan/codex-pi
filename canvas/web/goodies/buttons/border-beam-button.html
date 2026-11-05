@@ -1,0 +1,121 @@
+<!doctype html>
+<!-- pi-canvas goodie: Border Beam Button. Original implementation. Inspired by Reacticx border-beam (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Border Beam Button</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(120% 90% at 50% 0%,#15131c 0%,#0a0a0b 60%);
+    display:grid;place-items:center;overflow:hidden;color:#f4f4f6;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .btn{
+    position:relative;display:inline-flex;align-items:center;gap:10px;
+    padding:0 22px 0 24px;height:clamp(44px,15vh,52px);border-radius:999px;border:0;cursor:pointer;
+    background:linear-gradient(180deg,#19181f,#111015);
+    color:#f4f4f6;font-family:inherit;font-weight:600;font-size:15px;line-height:1;letter-spacing:-.01em;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 30px -10px rgba(124,92,255,.35),0 0 0 1px rgba(255,255,255,.08);
+    transition:transform .25s cubic-bezier(.3,1.4,.5,1),box-shadow .3s;
+    outline:none;
+  }
+  .btn:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 14px 40px -10px rgba(124,92,255,.55),0 0 0 1px rgba(255,255,255,.12)}
+  .btn:active{transform:scale(.97)}
+  .btn:focus-visible{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 3px rgba(168,140,255,.45)}
+  .btn svg.beam{position:absolute;inset:0;overflow:visible;pointer-events:none}
+  .btn .glow{filter:blur(6px);opacity:.9}
+  .beam rect{fill:none;stroke-linecap:round}
+  .label{position:relative;z-index:1}
+  .dot{width:7px;height:7px;border-radius:50%;background:#a78bfa;box-shadow:0 0 10px #a78bfa;position:relative;z-index:1}
+  .arrow{position:relative;z-index:1;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
+    background:rgba(255,255,255,.08);transition:transform .3s cubic-bezier(.3,1.4,.5,1),background .3s}
+  .btn:hover .arrow{transform:translateX(3px);background:rgba(255,255,255,.14)}
+  .sub{font-size:12.5px;color:#8b8a96;letter-spacing:.01em}
+  .sub b{color:#c9c6d6;font-weight:500}
+  @media (prefers-reduced-motion:reduce){
+    .btn,.arrow{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="btn" id="btn" type="button">
+    <svg class="beam" aria-hidden="true">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#ff6ad5"/><stop offset="1" stop-color="#ffd6a5"/>
+        </linearGradient>
+      </defs>
+      <g class="glow"></g>
+      <g class="sharp"></g>
+    </svg>
+    <span class="dot"></span>
+    <span class="label">Start building for free</span>
+    <span class="arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>
+  <div class="sub"><b>No credit card</b> · Cancel anytime</div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('btn');
+  var svg=btn.querySelector('svg.beam');
+  var NS='http://www.w3.org/2000/svg';
+  // Layered dashes: long dim tail → short bright head. Equal arc-length speed thanks to pathLength.
+  var layers=[
+    {len:34,w:1.6,color:'url(#g)',op:.28},
+    {len:20,w:1.8,color:'url(#g)',op:.65},
+    {len:9, w:2,  color:'#ffd9f2',op:.95},
+    {len:3, w:2.4,color:'#ffffff',op:1}
+  ];
+  var rects=[];
+  ['glow','sharp'].forEach(function(cls){
+    var g=svg.querySelector('.'+cls);
+    layers.forEach(function(l){
+      var r=document.createElementNS(NS,'rect');
+      r.setAttribute('pathLength','100');
+      r.setAttribute('stroke',l.color);
+      r.setAttribute('stroke-width',cls==='glow'?l.w*2.2:l.w);
+      r.setAttribute('stroke-opacity',l.op);
+      // head of every layer ends at the same point → offset each dash so their leading edges align
+      r.setAttribute('stroke-dasharray',l.len+' '+(100-l.len));
+      r.setAttribute('stroke-dashoffset',String(l.len-34));
+      g.appendChild(r);rects.push(r);
+    });
+  });
+  function size(){
+    var w=btn.offsetWidth,h=btn.offsetHeight;
+    svg.setAttribute('width',w);svg.setAttribute('height',h);
+    svg.setAttribute('viewBox','0 0 '+w+' '+h);
+    rects.forEach(function(r){
+      r.setAttribute('x',.75);r.setAttribute('y',.75);
+      r.setAttribute('width',w-1.5);r.setAttribute('height',h-1.5);
+      r.setAttribute('rx',(h-1.5)/2);
+    });
+  }
+  size();
+  if(window.ResizeObserver)new ResizeObserver(size).observe(btn);
+  rects.forEach(function(r){r._base=parseFloat(r.getAttribute('stroke-dashoffset'))});
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var t0=performance.now(),speed=1,target=1,phase=0,last=t0;
+  function frame(now){
+    var dt=Math.min(50,now-last);last=now;
+    speed+=(target-speed)*0.06;
+    phase=(phase+dt/5200*100*speed)%100;
+    for(var i=0;i<rects.length;i++)rects[i].setAttribute('stroke-dashoffset',(rects[i]._base-phase).toFixed(3));
+    requestAnimationFrame(frame);
+  }
+  if(reduce){rects.forEach(function(r){r.setAttribute('stroke-dashoffset',r._base-62)})}
+  else requestAnimationFrame(frame);
+  btn.addEventListener('pointerenter',function(){target=2.6});
+  btn.addEventListener('pointerleave',function(){target=1});
+  btn.addEventListener('click',function(){
+    target=5;setTimeout(function(){target=btn.matches(':hover')?2.6:1},500);
+  });
+})();
+</script>
+</body>
+</html>

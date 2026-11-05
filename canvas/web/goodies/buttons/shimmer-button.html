@@ -1,0 +1,126 @@
+<!doctype html>
+<!-- pi-canvas goodie: Shimmer Button. Original implementation. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shimmer Button</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(90% 70% at 50% 40%,#121218 0%,#0a0a0b 70%);
+    display:grid;place-items:center;overflow:hidden;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .btn{
+    position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:10px;
+    height:clamp(46px,26vh,54px);padding:0 26px 0 22px;border:0;border-radius:14px;cursor:pointer;outline:none;
+    color:#f5f5f7;font-family:inherit;font-weight:600;font-size:16px;line-height:1;letter-spacing:-.01em;
+    background:linear-gradient(180deg,#232328 0%,#141417 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.4),
+      0 1px 2px rgba(0,0,0,.6),0 12px 28px -12px rgba(0,0,0,.9),0 8px 40px -8px rgba(99,102,241,.28);
+    transform:translateZ(0) scale(var(--s,1));
+    transition:transform .45s cubic-bezier(.25,1.6,.4,1),box-shadow .3s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:focus-visible{box-shadow:0 0 0 1px rgba(255,255,255,.2),0 0 0 4px rgba(147,197,253,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+  .btn.down{--s:.95;transition-duration:.12s}
+  .clip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;z-index:-1}
+  /* sweeping band */
+  .clip::before{
+    content:"";position:absolute;top:-50%;bottom:-50%;width:42%;left:0;
+    background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.04) 30%,rgba(255,255,255,.22) 50%,rgba(255,255,255,.04) 70%,transparent 100%);
+    transform:translateX(var(--x,-120%)) skewX(-18deg);
+  }
+  /* rim highlight that rides with the band */
+  .rim{position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+    background:linear-gradient(100deg,transparent calc(var(--p,0%) - 18%),rgba(255,255,255,.65) var(--p,0%),transparent calc(var(--p,0%) + 18%));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);}
+  .icon{width:18px;height:18px;display:block;color:#c7d2fe;filter:drop-shadow(0 0 6px rgba(165,180,252,.6))}
+  .icon path{transform-origin:9px 9px;transition:transform .5s cubic-bezier(.25,1.6,.4,1)}
+  .btn:hover .icon .big{transform:rotate(90deg) scale(1.08)}
+  .spark{position:absolute;width:10px;height:10px;top:8px;left:0;pointer-events:none;opacity:0;
+    background:radial-gradient(circle,#fff 0 18%,rgba(255,255,255,.0) 60%);}
+  .spark::before,.spark::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:1.5px;margin:-.75px 0 0 -7px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,#fff,transparent)}
+  .spark::after{transform:rotate(90deg)}
+  .p{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;pointer-events:none;background:#fff;
+    box-shadow:0 0 6px 1px rgba(199,210,254,.9)}
+  .kbd{margin-left:4px;font:500 11.5px/1 ui-monospace,"SF Mono",Menlo,monospace;color:#8e8e98;padding:4px 6px;border-radius:6px;
+    background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+  @media (prefers-reduced-motion:reduce){.btn,.icon path{transition:none}}
+</style>
+</head>
+<body>
+<button class="btn" id="btn" type="button">
+  <span class="clip"></span>
+  <span class="rim"></span>
+  <svg class="icon" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
+    <path class="big" d="M9 1.5c.5 3.6 1.9 5 5.5 5.5-3.6.5-5 1.9-5.5 5.5-.5-3.6-1.9-5-5.5-5.5 3.6-.5 5-1.9 5.5-5.5z"/>
+    <path d="M14.2 11.4c.2 1.4.8 2 2.2 2.2-1.4.2-2 .8-2.2 2.2-.2-1.4-.8-2-2.2-2.2 1.4-.2 2-.8 2.2-2.2z" opacity=".75"/>
+  </svg>
+  <span>Generate with AI</span>
+  <span class="kbd">⌘ G</span>
+  <span class="spark" id="spark"></span>
+</button>
+<script>
+(function(){
+  var btn=document.getElementById('btn'),spark=document.getElementById('spark');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var auto=!reduce,sweepT=-1,DUR=1100,nextSweep=performance.now()+250,nextPress=performance.now()+1900;
+  function sweep(){sweepT=performance.now()}
+  function frame(now){
+    if(auto&&now>nextSweep){sweep();nextSweep=now+2600}
+    if(auto&&now>nextPress){autoPress();nextPress=now+5200}
+    var p=sweepT<0?-1:(now-sweepT)/DUR;
+    if(p>=0&&p<=1){
+      var e=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2; // ease in-out cubic
+      var w=btn.offsetWidth;
+      btn.style.setProperty('--x',(-120+e*360)+'%');
+      btn.style.setProperty('--p',(-20+e*140)+'%');
+      // spark rides the top edge slightly behind the band, peaking mid-sweep
+      var sx=w*(.12+e*.72),k=Math.sin(p*Math.PI);
+      spark.style.opacity=(k*k).toFixed(3);
+      spark.style.transform='translateX('+sx+'px) rotate('+(p*180)+'deg) scale('+(.6+Math.sin(p*Math.PI)*.6)+')';
+    }else if(p>1){
+      btn.style.setProperty('--x','-120%');btn.style.setProperty('--p','-30%');spark.style.opacity=0;sweepT=-1;
+    }
+    requestAnimationFrame(frame);
+  }
+  function burst(cx,cy){
+    var cols=['#ffffff','#c7d2fe','#f5d0fe','#a5f3fc'];
+    for(var i=0;i<16;i++){
+      var d=document.createElement('span');d.className='p';btn.appendChild(d);
+      d.style.background=cols[i%4];
+      if(i%3===0){d.style.borderRadius='0';d.style.clipPath='polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)';d.style.width=d.style.height='12px'}
+      var a=i/16*Math.PI*2+Math.random()*.4,r=40+Math.random()*50,s=.5+Math.random()*.7;
+      d.animate([
+        {transform:'translate('+cx+'px,'+cy+'px) scale('+s+')',opacity:1},
+        {transform:'translate('+(cx+Math.cos(a)*r*.8)+'px,'+(cy+Math.sin(a)*r*.8)+'px) scale('+s*.8+') rotate(90deg)',opacity:1,offset:.55},
+        {transform:'translate('+(cx+Math.cos(a)*r)+'px,'+(cy+Math.sin(a)*r)+'px) scale(.2) rotate(180deg)',opacity:0}
+      ],{duration:550+Math.random()*350,easing:'cubic-bezier(.15,.8,.3,1)'}).onfinish=function(){this.effect.target.remove()};
+    }
+  }
+  function press(cx,cy){
+    btn.classList.add('down');
+    setTimeout(function(){btn.classList.remove('down');if(!reduce){burst(cx,cy);sweep()}},130);
+  }
+  function autoPress(){press(btn.offsetWidth*.5,btn.offsetHeight*.5)}
+  function stop(){auto=false}
+  btn.addEventListener('pointerenter',function(){stop();sweep()});
+  btn.addEventListener('pointerdown',function(e){stop();btn.classList.add('down')});
+  btn.addEventListener('pointerup',function(e){
+    var r=btn.getBoundingClientRect();btn.classList.remove('down');
+    if(!reduce){burst(e.clientX-r.left,e.clientY-r.top);sweep()}
+  });
+  btn.addEventListener('pointerleave',function(){btn.classList.remove('down')});
+  btn.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){stop();if(!e.repeat)autoPress()}});
+  addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='g'){e.preventDefault();stop();btn.focus();autoPress()}});
+  if(reduce){btn.style.setProperty('--x','60%');btn.style.setProperty('--p','70%')}
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

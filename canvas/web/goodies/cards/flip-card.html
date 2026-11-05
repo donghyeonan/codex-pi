@@ -1,0 +1,161 @@
+<!doctype html>
+<!-- pi-canvas goodie: Flip Card. Original implementation. Inspired by Reacticx flip-card (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flip Card</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0a0a0b;
+    background-image: radial-gradient(80% 60% at 50% 110%, #1a1424 0%, transparent 70%);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    color: #f5f4f7; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { position: relative; width: 330px; flex: none; aspect-ratio: 1.55; perspective: 1100px; transform: scale(var(--s, 1)); }
+  .shadow {
+    position: absolute; left: 8%; right: 8%; bottom: -14%; height: 22%; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(0,0,0,.85), transparent); filter: blur(10px);
+  }
+  .card {
+    position: absolute; inset: 0; transform-style: preserve-3d; cursor: pointer; outline: none; border-radius: 20px;
+  }
+  .card:focus-visible { box-shadow: 0 0 0 2px #0a0a0b, 0 0 0 4px #ff9f6b; }
+  .side {
+    position: absolute; inset: 0; border-radius: 20px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  /* ---- front: drawn album art ---- */
+  .front { background: linear-gradient(180deg, #ffb37a 0%, #ff7a6b 34%, #b6457a 58%, #3b1d52 100%); }
+  .sun {
+    position: absolute; left: 50%; top: 22%; width: 34%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%;
+    background: linear-gradient(#fff4c9, #ffd27a 60%, #ff9d5c);
+    -webkit-mask: linear-gradient(#000 0 0) top/100% 55% no-repeat, repeating-linear-gradient(#000 0 6px, transparent 6px 9px);
+    mask: linear-gradient(#000 0 0) top/100% 55% no-repeat, repeating-linear-gradient(#000 0 6px, transparent 6px 9px);
+    box-shadow: 0 0 60px 10px rgba(255, 210, 122, .6);
+  }
+  .hills { position: absolute; inset: auto 0 0; height: 58%; }
+  .grain { position: absolute; inset: 0; opacity: .32; mix-blend-mode: overlay;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .front .info {
+    position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .front h2 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
+  .front p { margin: 3px 0 0; font-size: 12px; color: rgba(255,255,255,.75); }
+  .chip {
+    font-size: 10.5px; font-weight: 600; padding: 6px 10px; border-radius: 999px; letter-spacing: .02em; white-space: nowrap;
+    background: rgba(20, 10, 30, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2);
+  }
+  .tag { position: absolute; top: 14px; left: 16px; font: 600 10px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .18em; color: rgba(255,255,255,.8); }
+  /* ---- back: tracklist ---- */
+  .back {
+    transform: rotateY(180deg); padding: 16px 18px; box-sizing: border-box; display: flex; flex-direction: column;
+    background: radial-gradient(120% 100% at 100% 0%, #3a1f45 0%, #17131d 55%, #121116 100%);
+  }
+  .head { display: flex; align-items: center; gap: 12px; }
+  .mini { width: 40px; height: 40px; border-radius: 9px; flex: none; background: linear-gradient(180deg, #ffb37a, #ff7a6b 40%, #b6457a 65%, #3b1d52); box-shadow: 0 6px 16px rgba(255, 122, 107, .25); }
+  .head b { display: block; font-size: 14px; }
+  .head span { font-size: 11.5px; color: #a49cb0; }
+  .play { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; border: 0; background: #ff8f6b; display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 18px rgba(255, 143, 107, .45); }
+  ol { list-style: none; margin: 12px 0 0; padding: 0; font-size: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  li { display: flex; align-items: center; gap: 10px; color: #d9d4e0; }
+  li i { font-style: normal; width: 12px; color: #6f6779; font-variant-numeric: tabular-nums; }
+  li em { margin-left: auto; font-style: normal; color: #7f778a; font-variant-numeric: tabular-nums; }
+  li.on { color: #ffb08f; }
+  li.on i { color: #ffb08f; }
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 10px; width: 12px; }
+  .eq s { width: 2px; background: #ff8f6b; border-radius: 1px; animation: eq .9s ease-in-out infinite alternate; }
+  .eq s:nth-child(2) { animation-delay: -.3s; } .eq s:nth-child(3) { animation-delay: -.6s; }
+  @keyframes eq { from { height: 2px; } to { height: 10px; } }
+  @media (prefers-reduced-motion: reduce) { .eq s { animation: none; height: 7px; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="shadow" id="shadow"></div>
+    <div class="card" id="card" tabindex="0" role="button" aria-pressed="false" aria-label="Album card, press to flip">
+      <div class="side front">
+        <div class="sun"></div>
+        <svg class="hills" viewBox="0 0 330 124" preserveAspectRatio="none">
+          <path d="M0 60 C60 30 110 70 170 46 S280 20 330 44 V124 H0Z" fill="#7b2f6b" opacity=".75"/>
+          <path d="M0 84 C70 56 130 92 200 70 S300 58 330 72 V124 H0Z" fill="#4a1f5a"/>
+          <path d="M0 104 C80 88 150 112 230 96 S310 92 330 98 V124 H0Z" fill="#2a1438"/>
+        </svg>
+        <div class="grain"></div>
+        <div class="tag">LP · 2026</div>
+        <div class="info">
+          <div><h2>Low Tide Hours</h2><p>Saint Amaro</p></div>
+          <span class="chip">Tap to flip ↻</span>
+        </div>
+      </div>
+      <div class="side back">
+        <div class="head">
+          <div class="mini"></div>
+          <div><b>Low Tide Hours</b><span>Saint Amaro · 8 songs, 31 min</span></div>
+          <button class="play" aria-label="Play" tabindex="-1"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M2 1.2v10.6L11 6.5z" fill="#1a0f12"/></svg></button>
+        </div>
+        <ol>
+          <li><i>1</i>Harbor Lights<em>3:42</em></li>
+          <li class="on"><i><span class="eq"><s></s><s></s><s></s></span></i>Saltwater Static<em>4:05</em></li>
+          <li><i>3</i>Paper Moons<em>3:18</em></li>
+          <li><i>4</i>Undertow (Slow)<em>5:01</em></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+<script>
+(() => {
+  (function fit() {
+    const el = document.querySelector('.wrap');
+    const f = () => el.style.setProperty('--s', Math.min(1, (innerWidth - 32) / 330, (innerHeight - 70) / 215).toFixed(3));
+    addEventListener('resize', f); f();
+  })();
+  const card = document.getElementById('card');
+  const shadow = document.getElementById('shadow');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let angle = 0, vel = 0, target = 0, last = performance.now(), tilt = 0, tiltT = 0;
+  let auto = !reduce, timer;
+
+  function render() {
+    const rad = angle * Math.PI / 180;
+    const lift = Math.abs(Math.sin(rad));           // 0 at rest, 1 edge-on
+    card.style.transform = `translateY(${-lift * 14}px) rotateX(${tilt}deg) rotateY(${angle}deg) scale(${1 + lift * .05})`;
+    shadow.style.transform = `scale(${1 - lift * .35}, ${1 - lift * .2})`;
+    shadow.style.opacity = (1 - lift * .55).toFixed(3);
+  }
+  function step(now) {
+    const dt = Math.min(0.032, (now - last) / 1000); last = now;
+    // damped spring towards target angle
+    const force = (target - angle) * 140 - vel * 13;
+    vel += force * dt; angle += vel * dt;
+    tilt += (tiltT - tilt) * 0.12;
+    render();
+    requestAnimationFrame(step);
+  }
+  function flip() {
+    target = target ? 0 : 180;
+    card.setAttribute('aria-pressed', String(!!target));
+    if (reduce) { angle = target; render(); }
+  }
+  function stopAuto() { auto = false; clearInterval(timer); }
+
+  card.addEventListener('click', () => { stopAuto(); flip(); });
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stopAuto(); flip(); }
+  });
+  card.addEventListener('pointermove', e => {
+    const r = card.getBoundingClientRect();
+    tiltT = -((e.clientY - r.top) / r.height - .5) * 10;
+  });
+  card.addEventListener('pointerleave', () => { tiltT = 0; });
+
+  render();
+  if (!reduce) {
+    requestAnimationFrame(t => { last = t; requestAnimationFrame(step); });
+    timer = setInterval(() => auto && flip(), 2800);
+  }
+})();
+</script>
+</body>
+</html>

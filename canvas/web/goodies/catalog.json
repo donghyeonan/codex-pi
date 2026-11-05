@@ -1,0 +1,893 @@
+{
+ "categories": [
+  "buttons",
+  "inputs",
+  "text",
+  "loaders",
+  "cards",
+  "navigation",
+  "backgrounds",
+  "carousels",
+  "charts",
+  "blocks"
+ ],
+ "items": [
+  {
+   "id": "border-beam-button",
+   "name": "Border Beam Button",
+   "category": "buttons",
+   "file": "buttons/border-beam-button.html",
+   "w": 360,
+   "h": 200,
+   "bg": "dark",
+   "tags": [
+    "cta",
+    "pill",
+    "beam",
+    "glow",
+    "border"
+   ],
+   "description": "Pill call-to-action with a bright gradient beam that travels around its border at constant speed and accelerates on hover.",
+   "inspiredBy": "Reacticx · border-beam"
+  },
+  {
+   "id": "like-burst-button",
+   "name": "Like Burst Button",
+   "category": "buttons",
+   "file": "buttons/like-burst-button.html",
+   "w": 360,
+   "h": 200,
+   "bg": "dark",
+   "tags": [
+    "like",
+    "heart",
+    "particles",
+    "counter"
+   ],
+   "description": "Heart toggle with a ring and particle burst plus an odometer-style rolling like count.",
+   "inspiredBy": "Reacticx · spin-button"
+  },
+  {
+   "id": "magnetic-button",
+   "name": "Magnetic Button",
+   "category": "buttons",
+   "file": "buttons/magnetic-button.html",
+   "w": 360,
+   "h": 220,
+   "bg": "dark",
+   "tags": [
+    "magnetic",
+    "spring",
+    "physics",
+    "cursor"
+   ],
+   "description": "Circular “Get started” button that is pulled toward the cursor with spring physics and a parallax label.",
+   "inspiredBy": null
+  },
+  {
+   "id": "radiant-button",
+   "name": "Radiant Button",
+   "category": "buttons",
+   "file": "buttons/radiant-button.html",
+   "w": 360,
+   "h": 200,
+   "bg": "dark",
+   "tags": [
+    "glow",
+    "gradient",
+    "cursor",
+    "halo"
+   ],
+   "description": "Gradient-rimmed button whose soft halo and border highlight follow the cursor, orbiting on its own when idle.",
+   "inspiredBy": "Reacticx · radiant-button"
+  },
+  {
+   "id": "save-button",
+   "name": "Save Button",
+   "category": "buttons",
+   "file": "buttons/save-button.html",
+   "w": 360,
+   "h": 200,
+   "bg": "dark",
+   "tags": [
+    "state",
+    "loading",
+    "success",
+    "morph"
+   ],
+   "description": "Save button that morphs into a spinner and then a drawn check with a “Saved” label.",
+   "inspiredBy": "Reacticx · save-button"
+  },
+  {
+   "id": "shimmer-button",
+   "name": "Shimmer Button",
+   "category": "buttons",
+   "file": "buttons/shimmer-button.html",
+   "w": 360,
+   "h": 200,
+   "bg": "dark",
+   "tags": [
+    "shimmer",
+    "sparkle",
+    "ai",
+    "press"
+   ],
+   "description": "Dark AI action button with a sweeping shimmer highlight, twinkling spark and a springy press that throws off sparkles.",
+   "inspiredBy": null
+  },
+  {
+   "id": "elastic-slider",
+   "name": "Elastic Slider",
+   "category": "inputs",
+   "file": "inputs/elastic-slider.html",
+   "w": 420,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "slider",
+    "range",
+    "elastic",
+    "rubber-band",
+    "volume"
+   ],
+   "description": "Volume slider that rubber-bands when dragged past either end, with a floating value bubble.",
+   "inspiredBy": "Reacticx · elastic-slider"
+  },
+  {
+   "id": "expanding-search",
+   "name": "Expanding Search",
+   "category": "inputs",
+   "file": "inputs/expanding-search.html",
+   "w": 420,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "search",
+    "command",
+    "autocomplete",
+    "keyboard"
+   ],
+   "description": "Search icon that expands into a field with filtered, highlighted suggestions and full keyboard navigation.",
+   "inspiredBy": "Reacticx · search-bar"
+  },
+  {
+   "id": "gooey-switch",
+   "name": "Gooey Switch",
+   "category": "inputs",
+   "file": "inputs/gooey-switch.html",
+   "w": 420,
+   "h": 260,
+   "bg": "dark",
+   "tags": [
+    "switch",
+    "toggle",
+    "goo",
+    "svg-filter",
+    "settings"
+   ],
+   "description": "Settings toggles whose thumbs stretch and merge like liquid thanks to an SVG goo filter.",
+   "inspiredBy": "Reacticx · gooey-switch"
+  },
+  {
+   "id": "otp-input",
+   "name": "OTP Input",
+   "category": "inputs",
+   "file": "inputs/otp-input.html",
+   "w": 440,
+   "h": 280,
+   "bg": "dark",
+   "tags": [
+    "otp",
+    "verification",
+    "code",
+    "form",
+    "paste"
+   ],
+   "description": "Six-digit verification code input with an animated caret, auto-advance, paste support and success/error feedback.",
+   "inspiredBy": "Reacticx · otp-input"
+  },
+  {
+   "id": "stacked-chips",
+   "name": "Stacked Chips",
+   "category": "inputs",
+   "file": "inputs/stacked-chips.html",
+   "w": 420,
+   "h": 260,
+   "bg": "dark",
+   "tags": [
+    "chips",
+    "filter",
+    "tags",
+    "multi-select",
+    "flip"
+   ],
+   "description": "Selectable filter chips that reflow with smooth FLIP motion while selections stack into a counted summary.",
+   "inspiredBy": "Reacticx · stacked-chips"
+  },
+  {
+   "id": "theme-toggle",
+   "name": "Theme Toggle",
+   "category": "inputs",
+   "file": "inputs/theme-toggle.html",
+   "w": 420,
+   "h": 260,
+   "bg": "dark",
+   "tags": [
+    "theme",
+    "dark-mode",
+    "sun",
+    "moon",
+    "toggle"
+   ],
+   "description": "Sun-to-moon morphing toggle that flips its little stage between light and dark with a circular reveal.",
+   "inspiredBy": "Reacticx · animated-theme-toggle"
+  },
+  {
+   "id": "dust-text",
+   "name": "Dust Text",
+   "category": "text",
+   "file": "text/dust-text.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "particles",
+    "canvas",
+    "interactive",
+    "hero",
+    "word"
+   ],
+   "description": "Thousands of glowing dust particles assemble into a word and scatter away from the pointer.",
+   "inspiredBy": "Reacticx · dust-text"
+  },
+  {
+   "id": "gradient-wave-text",
+   "name": "Gradient Wave Text",
+   "category": "text",
+   "file": "text/gradient-wave-text.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "headline",
+    "gradient",
+    "wave",
+    "hero",
+    "animated"
+   ],
+   "description": "A large heading filled with a flowing multi-stop gradient while the letters ride a gentle wave; pointer steers the flow.",
+   "inspiredBy": "Reacticx · gradient-wave-text"
+  },
+  {
+   "id": "liquid-chrome-text",
+   "name": "Liquid Chrome Text",
+   "category": "text",
+   "file": "text/liquid-chrome-text.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "chrome",
+    "metal",
+    "svg-filter",
+    "liquid",
+    "hero"
+   ],
+   "description": "Polished liquid-metal lettering with rippling surface and moving specular reflections that track the pointer.",
+   "inspiredBy": "Reacticx · liquid-chrome-text"
+  },
+  {
+   "id": "rolling-counter",
+   "name": "Rolling Counter",
+   "category": "text",
+   "file": "text/rolling-counter.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "number",
+    "odometer",
+    "counter",
+    "kpi",
+    "revenue"
+   ],
+   "description": "An odometer-style revenue KPI where each digit column rolls to its new value with a staggered spring.",
+   "inspiredBy": "Reacticx · rolling-counter"
+  },
+  {
+   "id": "shimmer-wave-text",
+   "name": "Shimmer Wave Text",
+   "category": "text",
+   "file": "text/shimmer-wave-text.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "headline",
+    "shimmer",
+    "wave",
+    "hero",
+    "letters"
+   ],
+   "description": "A headline where a soft light wave sweeps across the letters, lifting each one as it passes; follows the pointer on hover.",
+   "inspiredBy": "Reacticx · shimmer-wave-text"
+  },
+  {
+   "id": "staggered-text",
+   "name": "Staggered Text",
+   "category": "text",
+   "file": "text/staggered-text.html",
+   "w": 560,
+   "h": 240,
+   "bg": "dark",
+   "tags": [
+    "headline",
+    "stagger",
+    "blur",
+    "rotating",
+    "hero"
+   ],
+   "description": "Rotating hero phrases whose letters enter and exit with a staggered blur-and-rise; click or use arrow keys to advance.",
+   "inspiredBy": "Reacticx · staggered-text"
+  },
+  {
+   "id": "typewriter-ai-text",
+   "name": "Typewriter AI Text",
+   "category": "text",
+   "file": "text/typewriter-ai-text.html",
+   "w": 560,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "ai",
+    "streaming",
+    "chat",
+    "typewriter",
+    "caret"
+   ],
+   "description": "An AI assistant answer that streams in token by token with a glowing gradient caret and soft fade-in.",
+   "inspiredBy": "Reacticx · dia-text"
+  },
+  {
+   "id": "circular-progress",
+   "name": "Circular Progress",
+   "category": "loaders",
+   "file": "loaders/circular-progress.html",
+   "w": 300,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "progress",
+    "ring",
+    "gradient",
+    "upload",
+    "percentage"
+   ],
+   "description": "A gradient ring progress indicator with a glowing end-cap and counting percentage; drag around the ring to scrub.",
+   "inspiredBy": "Reacticx · circular-progress"
+  },
+  {
+   "id": "morph-loader",
+   "name": "Morph Loader",
+   "category": "loaders",
+   "file": "loaders/morph-loader.html",
+   "w": 300,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "loader",
+    "morph",
+    "shapes",
+    "gradient",
+    "svg"
+   ],
+   "description": "A soft gradient blob that morphs between circle, rounded square and triangle while it spins.",
+   "inspiredBy": "Reacticx · morph-loader"
+  },
+  {
+   "id": "orbiting-dots",
+   "name": "Orbiting Dots",
+   "category": "loaders",
+   "file": "loaders/orbiting-dots.html",
+   "w": 300,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "loader",
+    "orbit",
+    "3d",
+    "canvas",
+    "spinner"
+   ],
+   "description": "Glowing dots orbit a pulsing core on three tilted rings with depth-sorted perspective; pointer tilts the system.",
+   "inspiredBy": "Reacticx · orbiting-dots"
+  },
+  {
+   "id": "pulse-equalizer",
+   "name": "Pulse Equalizer",
+   "category": "loaders",
+   "file": "loaders/pulse-equalizer.html",
+   "w": 320,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "voice",
+    "assistant",
+    "equalizer",
+    "orb",
+    "listening"
+   ],
+   "description": "A voice-assistant listening state with a pulsing gradient mic orb, live equalizer bars and a streaming transcript.",
+   "inspiredBy": "Reacticx · pulsing-dots / siri"
+  },
+  {
+   "id": "skeleton-shimmer",
+   "name": "Skeleton Shimmer",
+   "category": "loaders",
+   "file": "loaders/skeleton-shimmer.html",
+   "w": 380,
+   "h": 360,
+   "bg": "dark",
+   "tags": [
+    "skeleton",
+    "shimmer",
+    "placeholder",
+    "card",
+    "loading"
+   ],
+   "description": "A social post skeleton with a sweeping shimmer that resolves into real content, then loops; click to toggle.",
+   "inspiredBy": "Reacticx · Shimmer"
+  },
+  {
+   "id": "event-ticket-card",
+   "name": "Event Ticket",
+   "category": "cards",
+   "file": "cards/event-ticket-card.html",
+   "w": 440,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "ticket",
+    "boarding pass",
+    "barcode",
+    "holographic",
+    "perforation"
+   ],
+   "description": "A boarding-pass style event ticket with notched perforation, a generated barcode and a pointer-reactive holographic sheen.",
+   "inspiredBy": "Reacticx · event-ticket-card"
+  },
+  {
+   "id": "flip-card",
+   "name": "Flip Card",
+   "category": "cards",
+   "file": "cards/flip-card.html",
+   "w": 420,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "flip",
+    "3d",
+    "card",
+    "reveal",
+    "spring"
+   ],
+   "description": "A music album card that springs over in 3D to reveal track details on its back, with a dynamic depth shadow.",
+   "inspiredBy": "Reacticx · flip-card"
+  },
+  {
+   "id": "photo-stack",
+   "name": "Photo Stack",
+   "category": "cards",
+   "file": "cards/photo-stack.html",
+   "w": 420,
+   "h": 340,
+   "bg": "dark",
+   "tags": [
+    "polaroid",
+    "photos",
+    "stack",
+    "fan",
+    "gallery"
+   ],
+   "description": "A stack of hand-drawn polaroid snapshots that fans out on hover and shuffles the top photo to the back on click.",
+   "inspiredBy": "Reacticx · photo-stack"
+  },
+  {
+   "id": "profile-card",
+   "name": "Profile Card",
+   "category": "cards",
+   "file": "cards/profile-card.html",
+   "w": 380,
+   "h": 440,
+   "bg": "dark",
+   "tags": [
+    "profile",
+    "avatar",
+    "verified",
+    "follow",
+    "stats",
+    "social"
+   ],
+   "description": "A social profile card with an animated gradient avatar ring, shining verified badge, rolling stats and a stateful follow button.",
+   "inspiredBy": "Reacticx · profile-card"
+  },
+  {
+   "id": "receipt-card",
+   "name": "Receipt Printer",
+   "category": "cards",
+   "file": "cards/receipt-card.html",
+   "w": 380,
+   "h": 480,
+   "bg": "dark",
+   "tags": [
+    "receipt",
+    "paper",
+    "zigzag",
+    "print",
+    "checkout"
+   ],
+   "description": "A thermal paper receipt with zigzag torn edges that prints out of a slot line by line, totals rolling up at the end.",
+   "inspiredBy": "Reacticx · receipt-card"
+  },
+  {
+   "id": "tilt-glare-card",
+   "name": "Tilt Glare Card",
+   "category": "cards",
+   "file": "cards/tilt-glare-card.html",
+   "w": 420,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "3d",
+    "tilt",
+    "glare",
+    "parallax",
+    "credit card",
+    "hover"
+   ],
+   "description": "A metal credit card that tilts in 3D toward the pointer with a moving specular glare and parallax depth layers.",
+   "inspiredBy": null
+  },
+  {
+   "id": "bouncy-accordion",
+   "name": "Bouncy Accordion",
+   "category": "navigation",
+   "file": "navigation/bouncy-accordion.html",
+   "w": 420,
+   "h": 460,
+   "bg": "dark",
+   "tags": [
+    "accordion",
+    "faq",
+    "spring",
+    "disclosure",
+    "chevron"
+   ],
+   "description": "An FAQ accordion where panels open with springy overshooting height and chevrons rotate with a bounce.",
+   "inspiredBy": "Reacticx · bouncy-accordion"
+  },
+  {
+   "id": "context-menu",
+   "name": "Context Menu",
+   "category": "navigation",
+   "file": "navigation/context-menu.html",
+   "w": 420,
+   "h": 440,
+   "bg": "dark",
+   "tags": [
+    "context menu",
+    "long press",
+    "ios",
+    "blur",
+    "submenu"
+   ],
+   "description": "An iOS-style context menu that lifts the pressed item over a blurred backdrop, scales in from the touch point and opens a submenu.",
+   "inspiredBy": "Reacticx · context-menu"
+  },
+  {
+   "id": "fan-menu",
+   "name": "Fan Menu",
+   "category": "navigation",
+   "file": "navigation/fan-menu.html",
+   "w": 420,
+   "h": 360,
+   "bg": "dark",
+   "tags": [
+    "fab",
+    "radial menu",
+    "spring",
+    "stagger",
+    "actions"
+   ],
+   "description": "A floating action button that fans out a radial arc of actions with staggered spring physics and labelled hover states.",
+   "inspiredBy": "Reacticx · fan-menu"
+  },
+  {
+   "id": "gooey-tabs",
+   "name": "Gooey Tabs",
+   "category": "navigation",
+   "file": "navigation/gooey-tabs.html",
+   "w": 440,
+   "h": 220,
+   "bg": "dark",
+   "tags": [
+    "tabs",
+    "segmented control",
+    "gooey",
+    "svg filter",
+    "liquid"
+   ],
+   "description": "A segmented control whose liquid indicator stretches, splits and re-merges between options using an SVG goo filter.",
+   "inspiredBy": "Reacticx · gooey-search-tabs"
+  },
+  {
+   "id": "mobile-dock",
+   "name": "Magnifying Dock",
+   "category": "navigation",
+   "file": "navigation/mobile-dock.html",
+   "w": 560,
+   "h": 220,
+   "bg": "dark",
+   "tags": [
+    "dock",
+    "macos",
+    "magnification",
+    "icons",
+    "tooltip",
+    "bounce"
+   ],
+   "description": "A frosted macOS-style dock whose CSS-drawn app icons magnify under the pointer, bounce on launch and show tooltips.",
+   "inspiredBy": "Reacticx · mobile-dock"
+  },
+  {
+   "id": "morphing-tabbar",
+   "name": "Morphing Tab Bar",
+   "category": "navigation",
+   "file": "navigation/morphing-tabbar.html",
+   "w": 420,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "tab bar",
+    "bottom navigation",
+    "notch",
+    "morph",
+    "mobile"
+   ],
+   "description": "A mobile bottom tab bar whose notch and floating active bubble stretch and morph as they travel between tabs.",
+   "inspiredBy": "Reacticx · morphing-tabbar"
+  },
+  {
+   "id": "chroma-ring",
+   "name": "Chroma Ring",
+   "category": "backgrounds",
+   "file": "backgrounds/chroma-ring.html",
+   "w": 520,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "webgl",
+    "raymarching",
+    "iridescent",
+    "ring",
+    "bloom",
+    "3d"
+   ],
+   "description": "A raymarched iridescent torus with travelling light streaks and colour bloom; drag to tilt and fling it into a spin.",
+   "inspiredBy": "Reacticx · chroma-ring"
+  },
+  {
+   "id": "liquid-metal",
+   "name": "Liquid Metal",
+   "category": "backgrounds",
+   "file": "backgrounds/liquid-metal.html",
+   "w": 520,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "webgl",
+    "shader",
+    "chrome",
+    "metaballs",
+    "liquid",
+    "interactive"
+   ],
+   "description": "Chrome metaballs rendered in WebGL with environment reflections that merge, drift and follow your cursor; hold to gather them.",
+   "inspiredBy": "Reacticx · liquid-metal"
+  },
+  {
+   "id": "mesh-gradient",
+   "name": "Mesh Gradient Hero",
+   "category": "backgrounds",
+   "file": "backgrounds/mesh-gradient.html",
+   "w": 520,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "gradient",
+    "mesh",
+    "grain",
+    "hero",
+    "landing",
+    "canvas"
+   ],
+   "description": "A silky, slowly flowing mesh gradient with film grain behind a landing-page hero, cycling palettes and bending toward the pointer.",
+   "inspiredBy": "Reacticx · mesh-gradient"
+  },
+  {
+   "id": "nebula-orb",
+   "name": "Nebula Orb",
+   "category": "backgrounds",
+   "file": "backgrounds/nebula-orb.html",
+   "w": 520,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "webgl",
+    "shader",
+    "orb",
+    "ai",
+    "assistant",
+    "noise",
+    "glow"
+   ],
+   "description": "A glowing WebGL nebula sphere with domain-warped noise, fresnel rim and halo that follows the pointer and pulses on click.",
+   "inspiredBy": "Reacticx · nebula-orb"
+  },
+  {
+   "id": "siri-wave",
+   "name": "Voice Wave",
+   "category": "backgrounds",
+   "file": "backgrounds/siri-wave.html",
+   "w": 520,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "voice",
+    "assistant",
+    "waveform",
+    "canvas",
+    "ai",
+    "audio"
+   ],
+   "description": "Voice-assistant ribbons of additive sine lobes that react to a scripted transcript; hold anywhere (or Space) to talk.",
+   "inspiredBy": "Reacticx · siri-ios-27"
+  },
+  {
+   "id": "coverflow-3d",
+   "name": "3D Album Carousel",
+   "category": "carousels",
+   "file": "carousels/coverflow-3d.html",
+   "w": 640,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "carousel",
+    "3d",
+    "css-3d",
+    "albums",
+    "music",
+    "reflection"
+   ],
+   "description": "A CSS 3D ring of album covers with reflections, depth dimming, inertial drag and a now-playing pill that follows the front card.",
+   "inspiredBy": "Reacticx · 3d-carousel"
+  },
+  {
+   "id": "cinematic-carousel",
+   "name": "Cinematic Carousel",
+   "category": "carousels",
+   "file": "carousels/cinematic-carousel.html",
+   "w": 640,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "carousel",
+    "slider",
+    "movies",
+    "depth",
+    "blur",
+    "swipe",
+    "autoplay"
+   ],
+   "description": "An infinite film-poster carousel with depth, scale and blur on side cards, ambient colour glow, spring snapping, drag, arrows and autoplay.",
+   "inspiredBy": "Reacticx · cinematic-carousel"
+  },
+  {
+   "id": "logo-marquee",
+   "name": "Logo & Quote Marquee",
+   "category": "carousels",
+   "file": "carousels/logo-marquee.html",
+   "w": 640,
+   "h": 320,
+   "bg": "dark",
+   "tags": [
+    "marquee",
+    "logos",
+    "testimonials",
+    "social-proof",
+    "infinite",
+    "landing"
+   ],
+   "description": "Two counter-scrolling infinite rows of wordmarks and testimonials with soft edge fades that ease to a stop on hover and can be dragged.",
+   "inspiredBy": "Reacticx · curved-marquee"
+  },
+  {
+   "id": "radial-chart",
+   "name": "Activity Rings",
+   "category": "charts",
+   "file": "charts/radial-chart.html",
+   "w": 480,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "chart",
+    "radial",
+    "rings",
+    "fitness",
+    "progress",
+    "svg"
+   ],
+   "description": "Fitness-style activity rings with overlap past 100%, counting legend values and a week strip that animates between days.",
+   "inspiredBy": "Reacticx · radial-chart"
+  },
+  {
+   "id": "line-chart",
+   "name": "Revenue Line Chart",
+   "category": "charts",
+   "file": "charts/line-chart.html",
+   "w": 480,
+   "h": 300,
+   "bg": "dark",
+   "tags": [
+    "chart",
+    "line",
+    "area",
+    "tooltip",
+    "crosshair",
+    "svg",
+    "dashboard"
+   ],
+   "description": "A smooth gradient area chart that draws in, morphs between 1W/1M/3M/1Y ranges and shows a snapped crosshair tooltip on hover.",
+   "inspiredBy": "Reacticx · line-chart"
+  },
+  {
+   "id": "paywall-screen",
+   "name": "Paywall Screen",
+   "category": "blocks",
+   "file": "blocks/paywall-screen.html",
+   "w": 390,
+   "h": 844,
+   "bg": "dark",
+   "tags": [
+    "mobile",
+    "paywall",
+    "subscription",
+    "pricing",
+    "ios",
+    "screen"
+   ],
+   "description": "A full mobile paywall with glowing app-icon hero, feature list, yearly/monthly plan selector with savings badge, shimmering CTA and legal footer.",
+   "inspiredBy": "Reacticx · paywall"
+  },
+  {
+   "id": "settings-screen",
+   "name": "Settings Screen",
+   "category": "blocks",
+   "file": "blocks/settings-screen.html",
+   "w": 390,
+   "h": 844,
+   "bg": "light",
+   "tags": [
+    "mobile",
+    "settings",
+    "ios",
+    "list",
+    "toggle",
+    "search",
+    "screen"
+   ],
+   "description": "An iOS-style settings screen with live search, grouped icon-tile rows, a working Airplane Mode toggle and a large title that collapses on scroll.",
+   "inspiredBy": "Reacticx · settings-v1"
+  }
+ ]
+}

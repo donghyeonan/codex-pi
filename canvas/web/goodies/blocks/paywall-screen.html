@@ -1,0 +1,122 @@
+<!doctype html>
+<!-- pi-canvas goodie: Paywall Screen. Original implementation. Inspired by Reacticx paywall (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paywall Screen</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    --ink: #fff; --ink2: rgba(255,255,255,.64); --ink3: rgba(255,255,255,.4); --a1: #ff8a4c; --a2: #ff3d7f; --a3: #8b5cff; }
+  html, body { margin: 0; height: 100%; background: #050506; overflow: hidden; overflow: clip; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; display: grid; place-items: center; }
+  .scr { width: 390px; height: 844px; position: absolute; left: 50%; top: 50%; overflow: hidden; contain: paint; background: #0b0a0f; transform: translate(-50%, -50%) scale(var(--k, 1));
+    display: flex; flex-direction: column; padding: 0 20px 30px; box-sizing: border-box; }
+  .sb { height: 47px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 4px 12px 0 16px; font-size: 16px; font-weight: 600; position: relative; z-index: 2; }
+  .sb svg { height: 12px; }
+  .hero { height: 206px; flex: none; margin: 0 -20px; position: relative; display: grid; place-items: center; }
+  .aur { position: absolute; width: 420px; height: 420px; top: -170px; border-radius: 50%; filter: blur(50px); opacity: .55;
+    background: conic-gradient(from 0deg, var(--a1), var(--a2), var(--a3), #3cc8ff, var(--a1)); animation: spin 14s linear infinite; }
+  .rings { position: absolute; width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.06), inset 0 0 0 54px transparent;
+    background: radial-gradient(circle, transparent 37%, rgba(255,255,255,.07) 37.3%, transparent 37.8%, transparent 55%, rgba(255,255,255,.05) 55.3%, transparent 55.8%); }
+  .icon { width: 100px; height: 100px; border-radius: 26px; position: relative; display: grid; place-items: center; animation: float 5s ease-in-out infinite;
+    background: linear-gradient(140deg, var(--a1), var(--a2) 50%, var(--a3)); box-shadow: 0 24px 60px -10px rgba(255, 61, 127, .6), inset 0 1px 1px rgba(255,255,255,.6), inset 0 -8px 20px rgba(60,0,80,.35); }
+  .icon::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(160deg, rgba(255,255,255,.35), transparent 45%); }
+  .chip { position: absolute; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; display: flex; gap: 5px; align-items: center; white-space: nowrap;
+    background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: float 6s ease-in-out infinite; }
+  .chip i { width: 6px; height: 6px; border-radius: 50%; }
+  .close { position: absolute; left: 16px; top: 4px; width: 32px; height: 32px; border-radius: 50%; border: 0; display: grid; place-items: center; color: rgba(255,255,255,.8);
+    background: rgba(255,255,255,.1); cursor: pointer; z-index: 3; }
+  .rest { position: absolute; right: 18px; top: 10px; font-size: 14px; color: var(--ink2); background: none; border: 0; font-family: inherit; cursor: pointer; z-index: 3; }
+  h1 { margin: 2px 0 6px; font-size: 30px; line-height: 1.08; letter-spacing: -.035em; font-weight: 750; text-align: center; }
+  h1 span { background: linear-gradient(90deg, var(--a1), var(--a2), var(--a3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin: 0; text-align: center; font-size: 15px; color: var(--ink2); line-height: 1.4; }
+  ul { list-style: none; margin: 18px 0 0; padding: 0 6px; display: grid; gap: 11px; }
+  li { display: flex; gap: 13px; align-items: center; }
+  li .ic { width: 34px; height: 34px; flex: none; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+  li .ic svg { width: 17px; height: 17px; }
+  li b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  li small { display: block; font-size: 13px; color: var(--ink3); margin-top: 1px; }
+  .plans { margin-top: auto; padding-top: 16px; display: grid; gap: 10px; }
+  .plan { position: relative; display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 16px; cursor: pointer; text-align: left; font-family: inherit; color: inherit; width: 100%;
+    border: 0; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1); transition: background .3s, box-shadow .3s, transform .15s; }
+  .plan:active { transform: scale(.985); }
+  .plan[aria-checked="true"] { background: linear-gradient(rgba(255,61,127,.1), rgba(139,92,255,.08)); box-shadow: inset 0 0 0 2px var(--a2), 0 10px 30px -12px rgba(255,61,127,.5); }
+  .plan:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .rad { width: 22px; height: 22px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,.25); display: grid; place-items: center; transition: all .25s; }
+  .plan[aria-checked="true"] .rad { background: var(--a2); box-shadow: none; }
+  .rad svg { width: 12px; opacity: 0; transform: scale(.5); transition: all .25s; }
+  .plan[aria-checked="true"] .rad svg { opacity: 1; transform: none; }
+  .pn { flex: 1; } .pn b { display: block; font-size: 16px; font-weight: 650; } .pn small { font-size: 13px; color: var(--ink3); }
+  .pp { text-align: right; } .pp b { display: block; font-size: 16px; font-weight: 650; font-variant-numeric: tabular-nums; } .pp small { font-size: 12px; color: var(--ink3); }
+  .save { position: absolute; top: -9px; right: 14px; font-size: 10.5px; font-weight: 750; letter-spacing: .05em; padding: 3px 8px; border-radius: 999px; color: #fff;
+    background: linear-gradient(90deg, var(--a1), var(--a2)); box-shadow: 0 4px 12px rgba(255,61,127,.4); }
+  .cta { margin-top: 16px; height: 56px; border-radius: 16px; border: 0; width: 100%; position: relative; overflow: hidden; cursor: pointer; font: 650 17px var(--sans); color: #fff; letter-spacing: -.01em;
+    background: linear-gradient(90deg, var(--a1), var(--a2) 50%, var(--a3)); box-shadow: 0 14px 34px -10px rgba(255,61,127,.7), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .15s; }
+  .cta:active { transform: scale(.98); }
+  .cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.45) 50%, transparent 70%); transform: translateX(-120%); animation: shine 3.2s ease-in-out infinite 1s; }
+  .cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .note { margin: 10px 0 0; text-align: center; font-size: 13px; color: var(--ink2); min-height: 18px; }
+  .legal { margin-top: 12px; display: flex; justify-content: center; gap: 18px; font-size: 12px; color: var(--ink3); }
+  .legal a { color: inherit; text-decoration: none; } .legal a:hover { color: var(--ink2); }
+  .home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: rgba(255,255,255,.85); }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  @keyframes float { 50% { transform: translateY(-7px); } }
+  @keyframes shine { 0% { transform: translateX(-120%); } 45%, 100% { transform: translateX(120%); } }
+  @media (prefers-reduced-motion: reduce) { .aur, .icon, .chip, .cta::after { animation: none; } }
+</style>
+</head>
+<body>
+<div class="scr" id="scr">
+  <div class="sb"><span>9:41</span><svg viewBox="0 0 70 12" fill="#fff"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M31 3.2a9 9 0 0 1 12 0l-1.3 1.4a7 7 0 0 0-9.4 0zM33.6 6a5.3 5.3 0 0 1 6.8 0L39 7.4a3.3 3.3 0 0 0-4 0zM37 11.5l-2-2a2.8 2.8 0 0 1 4 0z"/><rect x="47" y=".5" width="21" height="11" rx="3" fill="none" stroke="#fff" stroke-opacity=".4"/><rect x="49" y="2.5" width="15" height="7" rx="1.6"/><rect x="69" y="4" width="1.3" height="4" rx=".6" fill-opacity=".4"/></svg></div>
+  <div class="hero">
+    <div class="aur"></div><div class="rings"></div>
+    <button class="close" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="rest">Restore</button>
+    <div class="icon"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.3 3.3 9.6 12M20.5 9.4h-9.6M18.3 18.4 13.6 9.8M9.7 20.7l4.8-8.4M3.5 14.6h9.6M5.7 5.6l4.7 8.6"/></svg></div>
+    <span class="chip" style="left:40px;top:62px;animation-delay:-1s"><i style="background:#ffb84d"></i>Relight</span>
+    <span class="chip" style="right:34px;top:86px;animation-delay:-3s"><i style="background:#3cc8ff"></i>Expand</span>
+    <span class="chip" style="left:62px;bottom:20px;animation-delay:-2s"><i style="background:#ff5ea8"></i>8K Export</span>
+    <span class="chip" style="right:56px;bottom:34px;animation-delay:-4s"><i style="background:#8bf07a"></i>RAW</span>
+  </div>
+  <h1>Unlock Lumen <span>Pro</span></h1>
+  <p class="sub">Studio-grade editing for every shot you take.</p>
+  <ul>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#ffb84d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><div><b>Unlimited AI edits</b><small>Remove, relight and expand any photo</small></div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#3cc8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 15l3-4 3 3 2-2 2 3"/></svg></span><div><b>RAW &amp; 8K export</b><small>Full resolution, never a watermark</small></div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#ff5ea8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.5A3.8 3.8 0 0 1 17.5 18z"/></svg></span><div><b>1 TB cloud library</b><small>Synced across iPhone, iPad and Mac</small></div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#8bf07a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="4"/><circle cx="16" cy="9" r="4"/><circle cx="12" cy="15" r="4"/></svg></span><div><b>300+ film presets</b><small>Fresh looks added every month</small></div></li>
+  </ul>
+  <div class="plans" role="radiogroup" aria-label="Plan">
+    <button class="plan" role="radio" data-p="y"><span class="save">SAVE 58%</span><span class="rad"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="pn"><b>Yearly</b><small>7-day free trial</small></span><span class="pp"><b>$49.99</b><small>$4.17 / month</small></span></button>
+    <button class="plan" role="radio" data-p="m"><span class="rad"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="pn"><b>Monthly</b><small>Cancel anytime</small></span><span class="pp"><b>$9.99</b><small>per month</small></span></button>
+  </div>
+  <button class="cta" id="cta">Start free trial</button>
+  <p class="note" id="note"></p>
+  <div class="legal"><a href="#" onclick="return false">Terms of Use</a><a href="#" onclick="return false">Privacy Policy</a></div>
+  <div class="home"></div>
+</div>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const scr = document.getElementById('scr');
+  const fit = () => scr.style.setProperty('--k', Math.min(1, innerWidth / 390, innerHeight / 844));
+  fit(); addEventListener('resize', fit);
+  const plans = [...document.querySelectorAll('.plan')], cta = document.getElementById('cta'), note = document.getElementById('note');
+  const COPY = { y: ['Start 7-day free trial', '7 days free, then $49.99/year. Cancel anytime.'], m: ['Continue with Monthly', 'Billed $9.99 every month. Cancel anytime.'] };
+  let cur = 'y', timer = 0;
+  function pick(p) {
+    cur = p;
+    plans.forEach(b => b.setAttribute('aria-checked', b.dataset.p === p));
+    cta.textContent = COPY[p][0]; note.textContent = COPY[p][1];
+  }
+  const stop = () => { clearInterval(timer); timer = 0; };
+  plans.forEach(b => b.addEventListener('click', () => { stop(); pick(b.dataset.p); }));
+  addEventListener('keydown', e => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { stop(); pick(cur === 'y' ? 'm' : 'y'); plans.find(b => b.dataset.p === cur).focus(); } });
+  cta.addEventListener('click', () => { stop(); const t = cta.textContent; cta.textContent = 'Processing…'; setTimeout(() => { cta.textContent = 'You’re all set ✓'; setTimeout(() => cta.textContent = t, 1600); }, 900); });
+  pick('y');
+  if (!reduce) timer = setInterval(() => pick(cur === 'y' ? 'm' : 'y'), 3200);
+})();
+</script>
+</body>
+</html>

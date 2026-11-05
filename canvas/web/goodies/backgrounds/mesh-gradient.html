@@ -1,0 +1,117 @@
+<!doctype html>
+<!-- pi-canvas goodie: Mesh Gradient Hero. Original implementation. Inspired by Reacticx mesh-gradient / grainy-gradient (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesh Gradient Hero</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; }
+  html, body { margin: 0; height: 100%; background: #0d0a1c; overflow: hidden; }
+  body { position: relative; font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; }
+  #mesh { position: absolute; inset: -8%; width: 116%; height: 116%; filter: blur(clamp(10px, 3vw, 22px)) saturate(1.15); }
+  .grain { position: absolute; inset: 0; pointer-events: none; opacity: .42; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 1.4 -.2 0 0 0 1.4 -.2 0 0 0 1.4 -.2 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .vig { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 40%, transparent 40%, rgba(6, 4, 16, .55) 100%); }
+  main { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center;
+    padding: 0 clamp(16px, 6vw, 48px); gap: clamp(8px, 2.6vh, 14px); }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 7px; border-radius: 999px;
+    font-size: 12px; font-weight: 500; color: rgba(255,255,255,.92); background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .pill b { font-weight: 600; font-size: 10px; letter-spacing: .04em; padding: 3px 7px; border-radius: 999px; background: #fff; color: #1a1033; }
+  h1 { margin: 0; font-size: clamp(22px, 6.6vw, 46px); line-height: 1.04; letter-spacing: -.035em; font-weight: 700;
+    text-shadow: 0 2px 24px rgba(20, 8, 50, .35); max-width: 14em; text-wrap: balance; }
+  p { margin: 0; font-size: clamp(12px, 2.7vw, 15px); line-height: 1.5; color: rgba(255,255,255,.82); max-width: 30em; text-wrap: balance; }
+  .row { display: flex; gap: 10px; margin-top: 4px; }
+  button { font: 600 13px/1 var(--sans); border-radius: 10px; padding: 11px 16px; cursor: pointer; border: 0; transition: transform .2s, box-shadow .2s, background .2s; }
+  button:active { transform: scale(.97); }
+  .pri { background: #fff; color: #140c2c; box-shadow: 0 8px 24px rgba(20, 8, 50, .35); }
+  .pri:hover { box-shadow: 0 10px 30px rgba(255, 255, 255, .3); }
+  .sec { background: rgba(255,255,255,.1); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .sec:hover { background: rgba(255,255,255,.18); }
+  button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .sw { position: absolute; right: 14px; bottom: 12px; display: flex; gap: 6px; }
+  .sw i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); cursor: pointer; transition: all .3s; }
+  .sw i.on { background: #fff; width: 18px; border-radius: 4px; }
+  @media (max-height: 240px) { p { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="mesh" width="48" height="30" aria-hidden="true"></canvas>
+<div class="grain"></div><div class="vig"></div>
+<main>
+  <span class="pill"><b>NEW</b>Realtime multiplayer canvas</span>
+  <h1>Design at the speed of thought</h1>
+  <p>Sketch, remix and ship interfaces together on one infinite canvas.</p>
+  <div class="row"><button class="pri">Start for free</button><button class="sec">Watch the demo</button></div>
+</main>
+<div class="sw" id="sw" role="group" aria-label="Palette"></div>
+<script>
+(() => {
+  const cv = document.getElementById('mesh'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const GW = 48, GH = 30, img = ctx.createImageData(GW, GH);
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const PALETTES = [
+    ['#2a0f6b', '#7b5cff', '#ff5fa2', '#ff9a5a', '#2bd4ff', '#140a3a'],
+    ['#06283d', '#1fd1b2', '#2b7bff', '#a7f36b', '#5b2bff', '#04121f'],
+    ['#3b0a2a', '#ff4d6d', '#ffb347', '#ffd9a0', '#c13cff', '#1c0614'],
+  ].map(p => p.map(hex));
+  // control points: base pos, orbit amplitude, speeds
+  const P = [[.2, .25, .18, .12, .21, .17], [.8, .2, .15, .16, .17, .23], [.75, .8, .2, .1, .13, .19],
+             [.25, .78, .14, .18, .19, .11], [.5, .5, .25, .2, .09, .14], [.5, .05, .3, .08, .11, .07]];
+  let cur = PALETTES[0].map(c => c.slice()), pal = 0, user = false;
+  const ptr = { x: .5, y: .5, w: 0 };
+  const t0 = performance.now();
+
+  function draw(now) {
+    const t = (now - t0) / 1000 + 3;
+    const tgt = PALETTES[pal];
+    cur.forEach((c, i) => { for (let k = 0; k < 3; k++) c[k] += (tgt[i][k] - c[k]) * (reduce ? 1 : .03); });
+    const pts = P.map((p, i) => {
+      let x = p[0] + Math.sin(t * p[4] + i * 1.7) * p[2], y = p[1] + Math.cos(t * p[5] + i * 2.3) * p[3];
+      if (i === 2 && ptr.w) { x += (ptr.x - x) * ptr.w; y += (ptr.y - y) * ptr.w; }
+      return [x, y, i === 5 ? .7 : 1];
+    });
+    const d = img.data;
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      let u = i / (GW - 1), v = j / (GH - 1);
+      // gentle domain warp makes the blends flow like silk
+      const wu = u + .06 * Math.sin(v * 5 + t * .4), wv = v + .06 * Math.cos(u * 4 - t * .3);
+      let r = 0, g = 0, b = 0, sw = 0;
+      for (let k = 0; k < 6; k++) {
+        const dx = (wu - pts[k][0]) * 1.6, dy = wv - pts[k][1];
+        const w = pts[k][2] / Math.pow(dx * dx + dy * dy + .015, 1.6);
+        r += cur[k][0] * w; g += cur[k][1] * w; b += cur[k][2] * w; sw += w;
+      }
+      const o = (j * GW + i) * 4;
+      d[o] = r / sw; d[o + 1] = g / sw; d[o + 2] = b / sw; d[o + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    if (!reduce) requestAnimationFrame(draw);
+  }
+
+  const sw = document.getElementById('sw');
+  const setPal = i => { pal = i; [...sw.children].forEach((e, k) => e.classList.toggle('on', k === i)); if (reduce) draw(performance.now()); };
+  PALETTES.forEach((_, i) => {
+    const e = document.createElement('i'); e.setAttribute('aria-label', 'Palette ' + (i + 1)); e.tabIndex = 0;
+    e.onclick = () => { user = true; setPal(i); };
+    e.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); user = true; setPal(i); } };
+    sw.appendChild(e);
+  });
+  setPal(0);
+  const auto = setInterval(() => { if (user || reduce) return clearInterval(auto); setPal((pal + 1) % PALETTES.length); }, 4200);
+
+  addEventListener('pointermove', e => {
+    if (!e.movementX && !e.movementY && !user) return;
+    user = true; ptr.x = e.clientX / innerWidth; ptr.y = e.clientY / innerHeight; ptr.w = .55;
+    if (reduce) draw(performance.now());
+  });
+  document.documentElement.addEventListener('pointerleave', () => ptr.w = 0);
+  addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { user = true; setPal((pal + (e.key === 'ArrowRight' ? 1 : 2)) % 3); } });
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

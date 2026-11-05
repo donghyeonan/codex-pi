@@ -1,0 +1,161 @@
+<!doctype html>
+<!-- pi-canvas goodie: Tilt Glare Card. Original implementation. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tilt Glare Card</title>
+<style>
+  :root { --rx: 0deg; --ry: 0deg; --gx: 50%; --gy: 50%; --ga: .0; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 0%, #17171c 0%, #0a0a0b 60%);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    color: #fff; -webkit-font-smoothing: antialiased;
+  }
+  .stage { perspective: 900px; width: min(78vw, 320px); }
+  .card {
+    position: relative; aspect-ratio: 1.586; border-radius: 16px;
+    transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry));
+    will-change: transform; cursor: pointer; outline: none;
+  }
+  .shadow {
+    position: absolute; inset: 12% 6% -8%; border-radius: 24px; transform: translateZ(-40px);
+    background: radial-gradient(closest-side, rgba(96, 70, 255, .55), rgba(30, 20, 80, 0));
+    filter: blur(22px); opacity: .9;
+  }
+  .face {
+    position: absolute; inset: 0; border-radius: inherit; overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 100% 0%, #4b3aa8 0%, rgba(75, 58, 168, 0) 55%),
+      radial-gradient(90% 120% at 0% 100%, #0f6c7a 0%, rgba(15, 108, 122, 0) 55%),
+      linear-gradient(135deg, #191826 0%, #0e0e16 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 1px 0 rgba(255, 255, 255, .22),
+      0 30px 60px -20px rgba(0, 0, 0, .8);
+  }
+  /* brushed micro lines */
+  .face::before {
+    content: ""; position: absolute; inset: 0; opacity: .35; mix-blend-mode: overlay;
+    background: repeating-linear-gradient(100deg, rgba(255,255,255,.07) 0 1px, transparent 1px 3px);
+  }
+  /* topographic rings */
+  .face::after {
+    content: ""; position: absolute; width: 140%; aspect-ratio: 1; right: -70%; top: -60%; opacity: .22;
+    background: repeating-radial-gradient(circle, transparent 0 9px, rgba(255,255,255,.35) 9px 10px);
+    -webkit-mask: radial-gradient(closest-side, #000 40%, transparent); mask: radial-gradient(closest-side, #000 40%, transparent);
+  }
+  .holo {
+    position: absolute; inset: 0; border-radius: inherit; mix-blend-mode: color-dodge; opacity: calc(var(--ga) * .38);
+    background: linear-gradient(115deg, transparent 20%, #ff6ad5 35%, #7afcff 48%, #feff9c 58%, transparent 72%);
+    background-size: 220% 220%; background-position: var(--gx) var(--gy);
+  }
+  .glare {
+    position: absolute; inset: 0; border-radius: inherit; mix-blend-mode: overlay; opacity: calc(.35 + var(--ga) * .65);
+    background: radial-gradient(farthest-corner circle at var(--gx) var(--gy), rgba(255,255,255,.75) 0%, rgba(255,255,255,.18) 28%, rgba(0,0,0,.35) 90%);
+  }
+  .layer { position: absolute; transform-style: preserve-3d; }
+  .brand { top: 9%; left: 7%; transform: translateZ(30px); font-weight: 700; letter-spacing: .02em; font-size: 15px; display: flex; align-items: center; gap: 7px; }
+  .brand i { width: 16px; height: 16px; border-radius: 5px; background: conic-gradient(from 210deg, #8b7bff, #4ee1d4, #ffd36e, #8b7bff); box-shadow: 0 0 12px rgba(139, 123, 255, .7); }
+  .tier { top: 10%; right: 7%; transform: translateZ(24px); font-size: 9.5px; letter-spacing: .24em; color: rgba(255,255,255,.6); text-transform: uppercase; }
+  .chip {
+    top: 34%; left: 7%; width: 15%; aspect-ratio: 1.3; border-radius: 6px; transform: translateZ(40px);
+    background: linear-gradient(135deg, #f7e0a3, #c9a14a 45%, #f3d98b 60%, #a37b2c);
+    box-shadow: inset 0 0 0 1px rgba(80, 55, 10, .5), 0 4px 10px rgba(0,0,0,.35);
+  }
+  .chip::before, .chip::after { content: ""; position: absolute; border: 1px solid rgba(90, 60, 10, .45); }
+  .chip::before { inset: 28% -1px; border-left: 0; border-right: 0; }
+  .chip::after { inset: -1px 34%; border-top: 0; border-bottom: 0; border-radius: 3px; }
+  .nfc { top: 36%; left: 26%; transform: translateZ(28px); width: 16px; height: 20px; }
+  .num {
+    left: 7%; top: 58%; transform: translateZ(50px); font: 500 clamp(12px, 4.2vw, 16px)/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: .1em; color: #f4f2ff; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.25);
+  }
+  .meta { left: 7%; right: 7%; bottom: 9%; transform: translateZ(34px); display: flex; justify-content: space-between; align-items: flex-end; }
+  .meta small { display: block; font-size: 7.5px; letter-spacing: .2em; color: rgba(255,255,255,.5); margin-bottom: 3px; }
+  .meta b { font-weight: 600; font-size: 11.5px; letter-spacing: .08em; }
+  .orbs { display: flex; }
+  .orbs span { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #a597ff, #5b48d6); }
+  .orbs span + span { margin-left: -9px; background: linear-gradient(135deg, #67f0dc, #148f9a); mix-blend-mode: screen; }
+  .hint { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .04em; transition: opacity .6s; }
+  body.touched .hint { opacity: 0; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card" id="card" tabindex="0" aria-label="Nova Infinite card, tilt with pointer or arrow keys">
+      <div class="shadow"></div>
+      <div class="face"></div>
+      <div class="holo"></div>
+      <div class="layer brand"><i></i>Nova</div>
+      <div class="layer tier">Infinite</div>
+      <div class="layer chip"></div>
+      <svg class="layer nfc" viewBox="0 0 16 20" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.6" stroke-linecap="round">
+        <path d="M3 6.5a5 5 0 0 1 0 7"/><path d="M7 4a9 9 0 0 1 0 12"/><path d="M11 1.5a13 13 0 0 1 0 17"/>
+      </svg>
+      <div class="layer num">4921 &nbsp;0388 &nbsp;7710 &nbsp;2046</div>
+      <div class="layer meta">
+        <div><small>CARDHOLDER</small><b>MAYA OKAFOR</b></div>
+        <div><small>VALID THRU</small><b>08/31</b></div>
+        <div class="orbs"><span></span><span></span></div>
+      </div>
+      <div class="glare"></div>
+    </div>
+  </div>
+  <div class="hint">Move your pointer over the card</div>
+<script>
+(() => {
+  const card = document.getElementById('card');
+  const root = document.documentElement.style;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MAX = 16; // degrees
+  let tx = 0, ty = 0, ta = 0;   // targets (-1..1)
+  let x = 0, y = 0, a = 0;      // current
+  let auto = !reduce, t0 = performance.now();
+
+  function apply() {
+    root.setProperty('--ry', (x * MAX).toFixed(2) + 'deg');
+    root.setProperty('--rx', (-y * MAX).toFixed(2) + 'deg');
+    root.setProperty('--gx', (50 + x * 50).toFixed(1) + '%');
+    root.setProperty('--gy', (50 + y * 50).toFixed(1) + '%');
+    root.setProperty('--ga', a.toFixed(3));
+  }
+  function frame(now) {
+    if (auto) {
+      const t = (now - t0) / 1000;
+      tx = Math.sin(t * 0.9) * 0.75;
+      ty = Math.sin(t * 1.3 + 1) * 0.55;
+      ta = 0.55 + Math.sin(t * 0.7) * 0.25;
+    }
+    const k = auto ? 0.08 : 0.16;
+    x += (tx - x) * k; y += (ty - y) * k; a += (ta - a) * k;
+    apply();
+    requestAnimationFrame(frame);
+  }
+  function stopAuto() { if (auto) { auto = false; document.body.classList.add('touched'); } }
+
+  function onMove(e) {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    stopAuto();
+    tx = Math.max(-1, Math.min(1, px * 2 - 1));
+    ty = Math.max(-1, Math.min(1, py * 2 - 1));
+    ta = 1;
+  }
+  card.addEventListener('pointermove', onMove);
+  card.addEventListener('pointerenter', onMove);
+  card.addEventListener('pointerleave', () => { tx = 0; ty = 0; ta = 0.15; });
+  card.addEventListener('keydown', e => {
+    const d = { ArrowLeft: [-.25, 0], ArrowRight: [.25, 0], ArrowUp: [0, -.25], ArrowDown: [0, .25] }[e.key];
+    if (!d) return;
+    e.preventDefault(); stopAuto();
+    tx = Math.max(-1, Math.min(1, tx + d[0])); ty = Math.max(-1, Math.min(1, ty + d[1])); ta = 1;
+  });
+  card.addEventListener('blur', () => { tx = 0; ty = 0; ta = .15; });
+
+  if (reduce) { x = tx = .35; y = ty = -.25; a = ta = .6; apply(); document.body.classList.add('touched'); }
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

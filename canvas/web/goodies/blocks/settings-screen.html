@@ -1,0 +1,160 @@
+<!doctype html>
+<!-- pi-canvas goodie: Settings Screen. Original implementation. Inspired by Reacticx settings-v1 (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings Screen</title>
+<style>
+  :root { color-scheme: light; --sans: ui-sans-serif, -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    --bg: #f2f2f7; --cell: #fff; --ink: #000; --ink2: #8a8a8e; --sep: rgba(60,60,67,.18); --blue: #007aff; --green: #34c759; }
+  html, body { margin: 0; height: 100%; background: #e5e5ea; overflow: hidden; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; display: grid; place-items: center; }
+  .scr { width: 390px; height: 844px; position: absolute; left: 50%; top: 50%; overflow: hidden; background: var(--bg); transform: translate(-50%, -50%) scale(var(--k, 1)); }
+  .sb { position: absolute; top: 0; left: 0; right: 0; height: 47px; z-index: 5; display: flex; align-items: center; justify-content: space-between; padding: 4px 26px 0 34px; font-size: 16px; font-weight: 600; box-sizing: border-box; }
+  .sb .r { display: flex; gap: 6px; align-items: center; }
+  .sb svg { height: 12px; display: block; }
+  #air { display: none; } .airplane #air { display: block; } .airplane #sig { display: none; } .airplane #wf { opacity: .25; }
+  .nav { position: absolute; top: 0; left: 0; right: 0; height: 92px; z-index: 4; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; box-sizing: border-box;
+    font-size: 17px; font-weight: 600; background: rgba(242,242,247,0); transition: background .2s, box-shadow .2s; }
+  .nav span { opacity: 0; transition: opacity .2s; }
+  .scrolled .nav { background: rgba(249,249,251,.82); backdrop-filter: blur(20px) saturate(1.8); -webkit-backdrop-filter: blur(20px) saturate(1.8); box-shadow: 0 .5px 0 var(--sep); }
+  .scrolled .nav span { opacity: 1; }
+  .list { position: absolute; inset: 0; overflow-y: auto; padding: 92px 0 40px; scrollbar-width: none; }
+  .list::-webkit-scrollbar { display: none; }
+  h1 { margin: 0; padding: 0 20px 8px; font-size: 34px; font-weight: 700; letter-spacing: .01em; transform-origin: left; transition: opacity .15s; }
+  .search { margin: 0 16px 20px; height: 36px; border-radius: 10px; background: rgba(118,118,128,.12); display: flex; align-items: center; gap: 6px; padding: 0 8px; }
+  .search input { flex: 1; border: 0; background: none; font: 17px var(--sans); outline: none; color: var(--ink); min-width: 0; }
+  .search input::placeholder { color: var(--ink2); }
+  .search svg { width: 16px; height: 16px; flex: none; }
+  .grp { margin: 0 16px 34px; background: var(--cell); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; min-height: 44px; padding-left: 16px; position: relative; cursor: pointer; transition: background .15s; user-select: none; }
+  .row:active, .row.press { background: #e5e5ea; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 61px; right: 0; height: .5px; background: var(--sep); }
+  .row.first::before { display: none; }
+  .tile { width: 29px; height: 29px; border-radius: 7px; display: grid; place-items: center; flex: none; margin-right: 16px; }
+  .tile svg { width: 19px; height: 19px; }
+  .lab { flex: 1; font-size: 17px; letter-spacing: -.02em; padding: 11px 0; }
+  .val { color: var(--ink2); font-size: 17px; letter-spacing: -.02em; margin-right: 6px; transition: opacity .2s; }
+  .chev { width: 8px; height: 13px; margin-right: 16px; flex: none; }
+  .dis .lab, .dis .val { opacity: .4; }
+  .tg { width: 51px; height: 31px; border-radius: 16px; background: rgba(120,120,128,.16); position: relative; margin-right: 16px; flex: none; transition: background .25s; border: 0; padding: 0; cursor: pointer; }
+  .tg::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 1px 1px rgba(0,0,0,.16); transition: transform .3s cubic-bezier(.3,1.3,.5,1); }
+  .tg[aria-checked="true"] { background: var(--green); }
+  .tg[aria-checked="true"]::after { transform: translateX(20px); }
+  .tg:focus-visible, .row:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+  .me { padding: 10px 16px; }
+  .av { width: 60px; height: 60px; border-radius: 50%; margin-right: 14px; flex: none; display: grid; place-items: center; color: #fff; font-size: 23px; font-weight: 600;
+    background: linear-gradient(145deg, #ffb38a, #ff6f91 45%, #8a6bff); }
+  .me b { display: block; font-size: 21px; font-weight: 500; letter-spacing: -.01em; }
+  .me small { font-size: 13px; color: var(--ink); opacity: .9; }
+  .none { text-align: center; color: var(--ink2); padding: 60px 30px; font-size: 15px; display: none; }
+  .none b { display: block; color: var(--ink); font-size: 20px; margin-bottom: 4px; }
+  .hide { display: none !important; }
+  .home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #000; z-index: 6; }
+</style>
+</head>
+<body>
+<div class="scr" id="scr">
+  <div class="sb"><span>9:41</span><span class="r">
+    <svg id="sig" viewBox="0 0 18 12" width="18"><rect y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" width="3" height="12" rx="1"/></svg>
+    <svg id="air" viewBox="0 0 24 24" width="16" style="height:15px"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>
+    <svg id="wf" viewBox="0 0 16 12" width="16"><path d="M1 4.2a10 10 0 0 1 14 0l-1.4 1.5a8 8 0 0 0-11.2 0zM3.6 7a6.3 6.3 0 0 1 8.8 0L11 8.4a4.3 4.3 0 0 0-6 0zM8 12l-2-2a2.8 2.8 0 0 1 4 0z"/></svg>
+    <svg viewBox="0 0 27 12" width="27"><rect x=".5" y=".5" width="23" height="11" rx="3.2" fill="none" stroke="#000" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="8" rx="2"/><rect x="25" y="4" width="1.5" height="4" rx=".7" opacity=".4"/></svg></span></div>
+  <div class="nav"><span>Settings</span></div>
+  <div class="list" id="list">
+    <h1 id="h1">Settings</h1>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="#8a8a8e" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 20 20"/></svg><input id="q" placeholder="Search" aria-label="Search settings" autocomplete="off"><svg viewBox="0 0 24 24" fill="#8a8a8e"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0" fill="none" stroke="#8a8a8e" stroke-width="2"/><rect x="11" y="17" width="2" height="4" rx="1"/></svg></label>
+    <div class="grp" id="me"><div class="row me" tabindex="0"><span class="av">ML</span><span class="lab"><b>Maya Lindqvist</b><small>Account, Cloud &amp; Purchases</small></span><svg class="chev" viewBox="0 0 8 13" fill="none" stroke="#c4c4c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg></div></div>
+    <div id="groups"></div>
+    <div class="none" id="none"><b>No Results</b>Check the spelling or try a new search.</div>
+  </div>
+  <div class="home"></div>
+</div>
+<script>
+(() => {
+  const S = 'fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
+  const I = {
+    air: '<path fill="#fff" d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/>',
+    wifi: `<g ${S}><path d="M3 9.5a13 13 0 0 1 18 0M6 13a8.5 8.5 0 0 1 12 0M9 16.5a4 4 0 0 1 6 0"/></g><circle cx="12" cy="19.5" r="1.6" fill="#fff"/>`,
+    bt: `<path ${S} d="M7 7.5l10 9-5 4.5V3l5 4.5-10 9"/>`,
+    cell: `<g ${S}><path d="M12 11v10M8 7a5.5 5.5 0 0 0 0 8M16 7a5.5 5.5 0 0 1 0 8M5 4.5a9.5 9.5 0 0 0 0 13M19 4.5a9.5 9.5 0 0 1 0 13"/></g><circle cx="12" cy="11" r="2" fill="#fff"/>`,
+    hot: `<g ${S}><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></g>`,
+    bell: `<g ${S}><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21h4"/></g>`,
+    snd: `<path fill="#fff" d="M4 9h3.5L13 4.5v15L7.5 15H4z"/><path ${S} d="M16.5 9a4.5 4.5 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>`,
+    moon: '<path fill="#fff" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/>',
+    hour: `<path ${S} d="M7 3h10M7 21h10M8 3c0 5.5 8 5 8 9s-8 3.5-8 9M16 3c0 5.5-8 5-8 9s8 3.5 8 9"/>`,
+    gear: '<circle cx="12" cy="12" r="7" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="2.75 2.75"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#fff" stroke-width="2.2"/><circle cx="12" cy="12" r="1.8" fill="#fff"/>',
+    cc: `<g ${S}><path d="M5 8h14M5 16h14"/></g><circle cx="9" cy="8" r="2.6" fill="#fff"/><circle cx="15" cy="16" r="2.6" fill="#fff"/>`,
+    sun: `<circle cx="12" cy="12" r="4" fill="#fff"/><path ${S} d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>`,
+    wall: '<g fill="#fff"><circle cx="12" cy="7" r="3.2"/><circle cx="12" cy="17" r="3.2"/><circle cx="7" cy="12" r="3.2"/><circle cx="17" cy="12" r="3.2"/></g><circle cx="12" cy="12" r="2.2" fill="#32ade6"/>',
+    bat: '<rect x="3" y="7" width="16" height="10" rx="2.5" fill="none" stroke="#fff" stroke-width="2"/><rect x="5.5" y="9.5" width="9" height="5" rx="1" fill="#fff"/><rect x="20" y="10" width="1.8" height="4" rx=".9" fill="#fff"/>',
+    priv: `<path fill="#fff" d="M12 2.5 4.5 5.5v6c0 4.5 3.2 8.3 7.5 9.5 4.3-1.2 7.5-5 7.5-9.5v-6z"/>`,
+  };
+  const GROUPS = [
+    [['air', '#ff9500', 'Airplane Mode', 'toggle'], ['wifi', '#007aff', 'Wi‑Fi', 'Lisbon-Home'], ['bt', '#007aff', 'Bluetooth', 'On'], ['cell', '#34c759', 'Cellular', ''], ['hot', '#34c759', 'Personal Hotspot', 'Off']],
+    [['bell', '#ff3b30', 'Notifications', ''], ['snd', '#ff2d55', 'Sounds & Haptics', ''], ['moon', '#5856d6', 'Focus', 'Work'], ['hour', '#5856d6', 'Screen Time', '']],
+    [['gear', '#8e8e93', 'General', ''], ['cc', '#8e8e93', 'Control Center', ''], ['sun', '#007aff', 'Display & Brightness', ''], ['wall', '#32ade6', 'Wallpaper', ''], ['bat', '#34c759', 'Battery', '86%'], ['priv', '#007aff', 'Privacy & Security', '']],
+  ];
+  const chev = '<svg class="chev" viewBox="0 0 8 13" fill="none" stroke="#c4c4c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 6.5 6.5l-5 5"/></svg>';
+  const host = document.getElementById('groups'), scr = document.getElementById('scr');
+  const rows = [];
+  GROUPS.forEach(g => {
+    const el = document.createElement('div'); el.className = 'grp';
+    g.forEach(([ic, c, label, v]) => {
+      const r = document.createElement('div'); r.className = 'row'; r.tabIndex = 0;
+      r.innerHTML = `<span class="tile" style="background:${c}"><svg viewBox="0 0 24 24">${I[ic]}</svg></span><span class="lab">${label.replace('&', '&amp;')}</span>` +
+        (v === 'toggle' ? `<button class="tg" role="switch" aria-checked="false" aria-label="${label}"></button>` : `<span class="val">${v}</span>${chev}`);
+      r.dataset.k = label.toLowerCase(); r.dataset.ic = ic; el.appendChild(r); rows.push(r);
+    });
+    host.appendChild(el);
+  });
+  const fit = () => scr.style.setProperty('--k', Math.min(1, innerWidth / 390, innerHeight / 844));
+  fit(); addEventListener('resize', fit);
+
+  // airplane mode drives Wi-Fi / Bluetooth / Cellular / Hotspot state
+  const tg = document.querySelector('.tg'), by = k => rows.find(r => r.dataset.ic === k);
+  function setAir(on) {
+    tg.setAttribute('aria-checked', on); scr.classList.toggle('airplane', on);
+    by('wifi').querySelector('.val').textContent = on ? 'Off' : 'Lisbon-Home';
+    by('bt').querySelector('.val').textContent = on ? 'Off' : 'On';
+    by('cell').classList.toggle('dis', on); by('hot').classList.toggle('dis', on);
+  }
+  let timer = 0;
+  const stop = () => { clearInterval(timer); timer = 0; };
+  tg.addEventListener('click', e => { e.stopPropagation(); stop(); setAir(tg.getAttribute('aria-checked') !== 'true'); });
+  rows.forEach(r => {
+    r.addEventListener('click', () => { stop(); if (r.contains(tg)) return tg.click(); r.classList.add('press'); setTimeout(() => r.classList.remove('press'), 180); });
+    r.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); } });
+  });
+
+  // live search filter
+  const q = document.getElementById('q'), none = document.getElementById('none'), me = document.getElementById('me');
+  q.addEventListener('input', () => {
+    stop();
+    const s = q.value.trim().toLowerCase().replace(/[-‑]/g, '');
+    let any = false;
+    rows.forEach(r => { const hit = !s || r.dataset.k.replace(/[-‑]/g, '').includes(s); r.classList.toggle('hide', !hit); any = any || hit; });
+    [...host.children].forEach(g => {
+      const vis = [...g.children].filter(r => !r.classList.contains('hide'));
+      g.classList.toggle('hide', !vis.length); [...g.children].forEach(r => r.classList.toggle('first', r === vis[0]));
+    });
+    me.classList.toggle('hide', !!s); none.style.display = any ? 'none' : 'block';
+  });
+
+  // large title collapses into the nav bar on scroll
+  const list = document.getElementById('list'), h1 = document.getElementById('h1');
+  list.addEventListener('scroll', () => {
+    const y = list.scrollTop; stop();
+    scr.classList.toggle('scrolled', y > 38);
+    h1.style.opacity = Math.max(0, 1 - y / 36);
+    h1.style.transform = y < 0 ? `scale(${1 + Math.min(.08, -y / 600)})` : '';
+  }, { passive: true });
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let on = false; timer = setInterval(() => setAir(on = !on), 2800);
+    setTimeout(() => { if (timer) setAir(on = true); }, 900);
+  }
+})();
+</script>
+</body>
+</html>

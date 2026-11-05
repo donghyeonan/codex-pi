@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- pi-canvas goodie: Gradient Wave Text. Original implementation. Inspired by Reacticx gradient-wave-text (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gradient Wave Text</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:#0a0a0b;color:#fff;overflow:hidden;display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .glow{position:fixed;inset:-20%;pointer-events:none;filter:blur(40px);opacity:.38;
+    background:radial-gradient(35% 30% at 30% 55%,#7c3aed55,transparent 70%),radial-gradient(30% 30% at 70% 50%,#f9731655,transparent 70%)}
+  .wrap{position:relative;text-align:center;user-select:none}
+  h1{margin:0;font-size:clamp(36px,13.5vw,88px);font-weight:800;letter-spacing:-.055em;line-height:1;white-space:nowrap;padding:.06em .04em .14em}
+  h1 span{display:inline-block;color:transparent;-webkit-background-clip:text;background-clip:text;will-change:transform,background-position;
+    background-image:linear-gradient(90deg,#22d3ee,#818cf8 16%,#e879f9 32%,#fb7185 48%,#fbbf24 64%,#34d399 80%,#22d3ee);
+    background-repeat:repeat-x}
+  .sub{margin-top:6px;font-size:clamp(12px,2.6vw,14px);color:#7b7b86;letter-spacing:.01em}
+  .sub b{color:#d4d4dc;font-weight:500}
+</style></head>
+<body>
+<div class="glow" id="glow"></div>
+<div class="wrap">
+  <h1 id="h" aria-label="Ship beautiful">Ship beautiful</h1>
+  <div class="sub">Every frame, <b>production&#8209;ready</b> by default.</div>
+</div>
+<script>
+(() => {
+  const h = document.getElementById('h');
+  const text = h.textContent; h.textContent = '';
+  const spans = [];
+  for (const ch of text) {
+    const s = document.createElement('span');
+    s.setAttribute('aria-hidden', 'true');
+    s.textContent = ch === ' ' ? ' ' : ch;
+    h.appendChild(s); spans.push(s);
+  }
+  let offs = [], W = 1, fs = 80;
+  const measure = () => {
+    const r = h.getBoundingClientRect(); W = r.width || 1;
+    fs = parseFloat(getComputedStyle(h).fontSize);
+    offs = spans.map(s => s.offsetLeft);
+    spans.forEach(s => { s.style.backgroundSize = `${W * 1.6}px 100%`; });
+  };
+  measure(); addEventListener('resize', measure);
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const draw = (t, phase, amp) => {
+    const n = spans.length;
+    for (let i = 0; i < n; i++) {
+      const s = spans[i];
+      const y = Math.sin(t * 2.2 - i * 0.55) * amp;
+      const rot = Math.cos(t * 2.2 - i * 0.55) * amp * 0.35;
+      s.style.backgroundPosition = `${-(offs[i] + phase)}px 0`;
+      s.style.transform = `translateY(${(y * fs * 0.045).toFixed(2)}px) rotate(${rot.toFixed(2)}deg)`;
+    }
+  };
+  if (reduce) { draw(0, W * 0.2, 0); return; }
+
+  let auto = true, t = 0, phase = 0, speed = 1, tSpeed = 1, amp = 1, tAmp = 1, last = performance.now(), idle;
+  const glow = document.getElementById('glow');
+  addEventListener('pointermove', e => { if (!e.movementX && !e.movementY) return; 
+    auto = false;
+    const x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5;
+    tSpeed = 1 + x * 5;            // steer flow direction/speed with x
+    tAmp = 0.4 + Math.abs(y) * 2.6; // wave height with y
+    glow.style.transform = `translate(${x * 30}px,${y * 20}px)`;
+    clearTimeout(idle); idle = setTimeout(() => { tSpeed = 1; tAmp = 1; }, 2500);
+  });
+  addEventListener('pointerdown', () => { auto = false; speed += 8; });
+  const loop = now => {
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    if (auto) { tSpeed = 1 + Math.sin(now / 2400) * 0.6; }
+    speed += (tSpeed - speed) * Math.min(1, dt * 3);
+    amp += (tAmp - amp) * Math.min(1, dt * 3);
+    t += dt * Math.max(0.5, Math.abs(speed));
+    phase += dt * 140 * speed;
+    draw(t, phase % (W * 1.6), amp);
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
+</body></html>

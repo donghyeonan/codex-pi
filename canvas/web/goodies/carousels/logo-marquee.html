@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- pi-canvas goodie: Logo Marquee. Original implementation. Inspired by Reacticx curved-marquee (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Logo Marquee</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; }
+  html, body { margin: 0; height: 100%; background: #0a0a0b; overflow: hidden; }
+  body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; display: grid; place-content: center; gap: clamp(12px, 4.5vh, 22px); user-select: none;
+    background: radial-gradient(80% 60% at 50% 0%, rgba(124, 92, 255, .12), transparent 70%), #0a0a0b; }
+  .eyebrow { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.45); }
+  .eyebrow b { color: rgba(255,255,255,.85); font-weight: 600; }
+  .row { width: 100vw; overflow: hidden; cursor: grab; touch-action: pan-y;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 24%, #000 76%, transparent); mask: linear-gradient(90deg, transparent, #000 24%, #000 76%, transparent); }
+  .row:active { cursor: grabbing; }
+  .track { display: flex; width: max-content; will-change: transform; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 clamp(18px, 4vw, 30px); height: 40px; font-size: 18px; font-weight: 650; letter-spacing: -.02em;
+    color: rgba(255,255,255,.5); transition: color .3s; white-space: nowrap; }
+  .logo:hover { color: #fff; }
+  .logo svg { width: 20px; height: 20px; flex: none; }
+  .serif { font-family: ui-serif, "New York", Georgia, serif; font-style: italic; font-weight: 500; font-size: 20px; }
+  .caps { text-transform: uppercase; letter-spacing: .2em; font-size: 14px; font-weight: 700; }
+  .lower { text-transform: lowercase; font-weight: 750; letter-spacing: -.04em; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
+  .quote { width: 236px; margin: 0 7px; padding: 13px 14px; border-radius: 14px; flex: none; box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: box-shadow .3s, background .3s; }
+  .quote:hover { background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+  .quote p { margin: 0 0 10px; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,.85); white-space: normal; }
+  .who { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,.5); }
+  .who b { display: block; color: #fff; font-weight: 600; font-size: 11.5px; }
+  .av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 9.5px; font-weight: 700; color: #fff; flex: none; }
+  .row:focus { outline: none; }
+  .row:focus-visible { background: rgba(255,255,255,.035); }
+</style>
+</head>
+<body>
+<div class="eyebrow">Trusted by <b>4,000+</b> product teams</div>
+<div class="row" id="r1" tabindex="0" aria-label="Customer logos"><div class="track">
+  <div class="logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9 18H3z"/></svg>Northwind</div>
+  <div class="logo lower"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>lumen</div>
+  <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 18a8 8 0 0 1 16 0M8 18a4 4 0 0 1 8 0"/></svg>Arcflow</div>
+  <div class="logo caps"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l10 10-10 10L2 12z" opacity=".5"/><path d="M12 7l5 5-5 5-5-5z"/></svg>Vertex</div>
+  <div class="logo serif">Halcyon&nbsp;&amp;&nbsp;Co.</div>
+  <div class="logo lower"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="4"/><rect x="3" y="13" width="8" height="8" rx="4"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>quanta</div>
+  <div class="logo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z"/></svg>Polaris</div>
+  <div class="logo mono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 2l7 9-7 11-7-11z M5 11h14"/></svg>kitebase</div>
+</div></div>
+<div class="row" id="r2" tabindex="0" aria-label="Customer quotes"><div class="track">
+  <figure class="quote"><p>“We replaced three tools in a week. Design reviews are finally async.”</p><div class="who"><span class="av" style="background:linear-gradient(135deg,#ff7a59,#ff3d7f)">PR</span><span><b>Priya Raman</b>Design Lead, Northwind</span></div></figure>
+  <figure class="quote"><p>“The canvas feels instant, even with forty people in one file.”</p><div class="who"><span class="av" style="background:linear-gradient(135deg,#4f8bff,#7c5cff)">TO</span><span><b>Tomás Ortega</b>Staff Engineer, Arcflow</span></div></figure>
+  <figure class="quote"><p>“Handoff used to be a meeting. Now it’s a link and a comment.”</p><div class="who"><span class="av" style="background:linear-gradient(135deg,#1fcf9a,#16a3c4)">HB</span><span><b>Hannah Becker</b>Product Manager, Quanta</span></div></figure>
+  <figure class="quote"><p>“Our onboarding redesign shipped two full sprints early.”</p><div class="who"><span class="av" style="background:linear-gradient(135deg,#ffc24d,#ff8a3d)">KW</span><span><b>Kenji Watanabe</b>Founder, Kitebase</span></div></figure>
+  <figure class="quote"><p>“The best multiplayer experience I’ve used. Full stop.”</p><div class="who"><span class="av" style="background:linear-gradient(135deg,#c86bff,#ff5ec4)">AO</span><span><b>Amara Okafor</b>VP Product, Polaris</span></div></figure>
+</div></div>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rows = [['r1', 38], ['r2', -26]].map(([id, speed]) => {
+    const row = document.getElementById(id), track = row.firstElementChild;
+    // duplicate content until it is at least 2x the viewport for a seamless loop
+    const base = [...track.children];
+    while (track.scrollWidth < innerWidth * 2 + 600) base.forEach(n => { const c = n.cloneNode(true); c.setAttribute('aria-hidden', 'true'); track.appendChild(c); });
+    const st = { row, track, speed, off: 0, k: 1, hover: false, drag: null, loop: 0 };
+    st.loop = base.reduce((w, n) => w + n.getBoundingClientRect().width + parseFloat(getComputedStyle(n).marginLeft) * 2, 0);
+    if (speed < 0) st.off = -st.loop * .5;
+    row.addEventListener('pointerenter', () => st.hover = true);
+    row.addEventListener('pointerleave', () => st.hover = false);
+    row.addEventListener('pointerdown', e => { st.drag = { x: e.clientX, o: st.off }; row.setPointerCapture(e.pointerId); });
+    row.addEventListener('pointermove', e => { if (st.drag) { st.off = st.drag.o + (e.clientX - st.drag.x); place(st); } });
+    const up = () => st.drag = null;
+    row.addEventListener('pointerup', up); row.addEventListener('pointercancel', up);
+    row.addEventListener('focus', () => st.hover = true); row.addEventListener('blur', () => st.hover = false);
+    row.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { st.off += e.key === 'ArrowLeft' ? 60 : -60; place(st); }
+    });
+    return st;
+  });
+  function place(st) {
+    const L = st.loop; let o = st.off % L; if (o > 0) o -= L;
+    st.track.style.transform = `translate3d(${o.toFixed(2)}px,0,0)`;
+  }
+  let last = performance.now();
+  function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    rows.forEach(st => {
+      // ease to a stop on hover/focus instead of an abrupt freeze
+      st.k += ((st.hover || st.drag ? 0 : 1) - st.k) * Math.min(1, dt * 5);
+      if (!st.drag) st.off -= st.speed * st.k * dt;
+      place(st);
+    });
+    requestAnimationFrame(tick);
+  }
+  rows.forEach(place);
+  if (!reduce) requestAnimationFrame(tick);
+  addEventListener('resize', () => rows.forEach(place));
+})();
+</script>
+</body>
+</html>

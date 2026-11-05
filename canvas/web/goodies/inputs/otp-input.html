@@ -1,0 +1,163 @@
+<!doctype html>
+<!-- pi-canvas goodie: OTP Input. Original implementation. Inspired by Reacticx otp-input (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OTP Input</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(80% 70% at 50% 35%,#131317 0%,#0a0a0b 75%);
+    display:grid;place-items:center;overflow:hidden;color:#ececef;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{text-align:center;padding-top:12px}
+  h1{margin:0;font-size:18px;font-weight:650;letter-spacing:-.02em}
+  .sub{margin:6px 0 20px;font-size:13px;color:#82818b}
+  .sub b{color:#c9c8d0;font-weight:500}
+  .otp{position:relative;display:inline-flex;align-items:center;gap:8px}
+  .box{position:relative;width:clamp(36px,10.5vw,48px);height:clamp(46px,20vh,56px);border-radius:12px;display:grid;place-items:center;
+    background:#141418;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;
+    transition:box-shadow .3s,background .3s}
+  .box.filled{background:#18181d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+  .box span{display:block}
+  .dash{width:10px;height:2px;border-radius:2px;background:#3a3a42}
+  .ring{position:absolute;left:0;top:0;border-radius:12px;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 0 1.5px #a78bfa,0 0 0 4px rgba(167,139,250,.18),0 0 24px -4px rgba(167,139,250,.5);
+    transition:transform .32s cubic-bezier(.3,1.3,.5,1),opacity .25s}
+  .otp.focus .ring{opacity:1}
+  .caret{position:absolute;left:50%;top:50%;width:2px;height:24px;margin:-12px 0 0 -1px;border-radius:2px;background:#c4b5fd;
+    animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .ring.full .caret{display:none}
+  input{position:absolute;inset:0;width:100%;opacity:0;border:0;padding:0;font-size:16px;color:transparent;caret-color:transparent;background:none;cursor:text;outline:none}
+  .otp.ok .box{box-shadow:inset 0 0 0 1.5px #34d399,0 0 22px -6px rgba(52,211,153,.75);background:#0f1d17;color:#a7f3d0}
+  .otp.err .box{box-shadow:inset 0 0 0 1.5px #f87171,0 0 18px -6px rgba(248,113,113,.6);color:#fecaca}
+  .otp.ok .ring,.otp.err .ring{opacity:0}
+  .msg{margin-top:18px;height:18px;font-size:12.5px;color:#76757f;display:flex;align-items:center;justify-content:center;gap:6px}
+  .msg.ok{color:#6ee7b7}.msg.err{color:#fca5a5}
+  .msg .s,.msg.ok .i,.msg.err .i{display:none}
+  .msg.ok .s,.msg.err .s{display:flex;align-items:center;gap:6px}
+  .msg a{color:#c4b5fd;text-decoration:none;font-weight:500}
+  .note{position:absolute;left:50%;top:10px;width:min(340px,calc(100vw - 32px));transform:translate(-50%,-140%);display:flex;gap:10px;align-items:center;
+    padding:10px 12px;border-radius:16px;text-align:left;cursor:pointer;z-index:2;
+    background:rgba(38,38,44,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 16px 40px -12px rgba(0,0,0,.8);transition:transform .55s cubic-bezier(.3,1.25,.4,1)}
+  .note.show{transform:translate(-50%,0)}
+  .note .ap{width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(180deg,#5af07a,#20c246)}
+  .note .tx{flex:1;min-width:0;font-size:12.5px;line-height:1.35}
+  .note .tx b{font-weight:600}.note .tx i{font-style:normal;color:#8f8e98;float:right;font-size:11px}
+  .note .tx div{color:#d4d3da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (prefers-reduced-motion:reduce){.ring,.note,.box{transition:none}.caret{animation:none}}
+</style>
+</head>
+<body>
+<div class="note" id="note" role="button" aria-label="Fill code from Messages">
+  <div class="ap"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 3c4 0 7 2.4 7 5.4s-3 5.4-7 5.4c-.8 0-1.6-.1-2.3-.3L3.4 15l.9-2.7C2.9 11.3 2 9.9 2 8.4 2 5.4 5 3 9 3z" fill="#fff"/></svg></div>
+  <div class="tx"><b>Messages</b><i>now</i><div>Your Northwind code is <b>428913</b>. Don’t share it.</div></div>
+</div>
+<div class="wrap">
+  <h1>Check your phone</h1>
+  <p class="sub">Enter the 6-digit code sent to <b>+1 (415) •••‑0192</b></p>
+  <div class="otp" id="otp">
+    <div class="box"><span></span></div><div class="box"><span></span></div><div class="box"><span></span></div>
+    <div class="dash"></div>
+    <div class="box"><span></span></div><div class="box"><span></span></div><div class="box"><span></span></div>
+    <div class="ring" id="ring"><i class="caret"></i></div>
+    <input id="inp" inputmode="numeric" autocomplete="one-time-code" aria-label="Verification code" spellcheck="false">
+  </div>
+  <div class="msg" id="msg"><span class="i">Didn’t get it? <a href="#" id="resend">Resend in 0:24</a></span><span class="s" id="st"></span></div>
+</div>
+<script>
+(function(){
+  var otp=document.getElementById('otp'),inp=document.getElementById('inp'),ring=document.getElementById('ring'),
+      msg=document.getElementById('msg'),note=document.getElementById('note');
+  var boxes=[].slice.call(otp.querySelectorAll('.box'));
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var CODE='428913',prev='',auto=!reduce,timers=[],secs=24,st=document.getElementById('st'),rs=document.getElementById('resend');
+  function later(f,ms){timers.push(setTimeout(f,ms))}
+  function place(){
+    var i=Math.min(prev.length,5),b=boxes[i];
+    ring.style.width=b.offsetWidth+'px';ring.style.height=b.offsetHeight+'px';
+    ring.style.transform='translate('+b.offsetLeft+'px,'+b.offsetTop+'px)';
+    ring.classList.toggle('full',prev.length>=6);
+  }
+  function setMsg(cls,html){msg.className='msg '+cls;st.innerHTML=html}
+  function render(v){
+    otp.classList.remove('ok','err');
+    boxes.forEach(function(b,i){
+      var c=v[i]||'',s=b.firstChild;
+      if(s.textContent!==c){
+        s.textContent=c;
+        if(c&&!reduce)s.animate([{transform:'translateY(8px) scale(.6)',opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.3,1.5,.5,1)'});
+      }
+      b.classList.toggle('filled',!!c);
+    });
+    prev=v;place();
+    if(v.length<6)setMsg('','');
+    if(v.length===6)check(v);
+  }
+  function check(v){
+    if(v===CODE){
+      otp.classList.add('ok');
+      setMsg('ok','<svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 7.3l2.6 2.5L11 4.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Verified — signing you in');
+      if(!reduce)boxes.forEach(function(b,i){b.animate([{transform:'none'},{transform:'translateY(-6px) scale(1.06)'},{transform:'none'}],{duration:420,delay:i*55,easing:'cubic-bezier(.3,1.4,.5,1)'})});
+    }else{
+      otp.classList.add('err');setMsg('err','That code didn’t match. Try again.');
+      if(!reduce)otp.animate([{transform:'none'},{transform:'translateX(-9px)'},{transform:'translateX(8px)'},{transform:'translateX(-6px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:440,easing:'ease-out'});
+    }
+  }
+  function setVal(v){inp.value=v;render(v)}
+  inp.addEventListener('input',function(e){
+    var v=inp.value.replace(/\D/g,'').slice(0,6),d=(e.data||'').replace(/\D/g,'');
+    if(d.length>=6)v=d.slice(0,6); // a full code inserted (autofill) replaces what was there
+    if(inp.value!==v)inp.value=v;
+    render(v);
+  });
+  inp.addEventListener('keydown',function(e){
+    // after a failed attempt, typing a digit starts over
+    if(otp.classList.contains('err')&&/^\d$/.test(e.key)){e.preventDefault();setVal(e.key)}
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='Home'||e.key==='ArrowUp')e.preventDefault();
+  });
+  inp.addEventListener('paste',function(e){
+    var d=((e.clipboardData||window.clipboardData).getData('text')||'').replace(/\D/g,'');
+    e.preventDefault();if(!d)return;
+    setVal((d.length>=6||otp.classList.contains('err')?d:prev+d).slice(0,6));
+  });
+  inp.addEventListener('click',function(){inp.setSelectionRange(inp.value.length,inp.value.length)});
+  inp.addEventListener('focus',function(){otp.classList.add('focus');place()});
+  inp.addEventListener('blur',function(){otp.classList.remove('focus')});
+  function takeOver(){
+    if(!auto)return;auto=false;timers.forEach(clearTimeout);timers=[];
+    setVal('');note.classList.add('show');later(function(){note.classList.remove('show')},6000);
+  }
+  inp.addEventListener('pointerdown',takeOver);
+  addEventListener('keydown',function(e){if(auto){takeOver();inp.focus()}});
+  note.addEventListener('click',function(){takeOver();note.classList.remove('show');inp.focus();
+    var i=0;(function step(){setVal(CODE.slice(0,++i));if(i<6)setTimeout(step,55)})()});
+  rs.addEventListener('click',function(e){e.preventDefault();
+    if(secs>0)return;secs=25;tick();note.classList.add('show');setTimeout(function(){note.classList.remove('show')},4000)});
+  function tick(){if(secs>0)secs--;rs.textContent=secs?'Resend in 0:'+String(secs).padStart(2,'0'):'Resend code'}
+  setInterval(tick,1000);
+  // ---- demo loop: notification → a typo (shake) → correct code (glow)
+  function type(str,start,gap){for(var i=1;i<=str.length;i++)(function(k){later(function(){setVal(str.slice(0,k))},start+k*gap)})(i)}
+  function demo(){
+    if(!auto)return;
+    setVal('');otp.classList.add('focus');secs=25;tick();
+    later(function(){note.classList.add('show')},300);
+    type('428931',1100,170);
+    later(function(){note.classList.remove('show')},2400);
+    later(function(){setVal('')},3500);
+    type('428913',3700,140);
+    later(function(){otp.classList.remove('focus')},4700);
+    later(demo,7600);
+  }
+  place();
+  if(auto)demo();else setVal('4289');
+  addEventListener('resize',place);
+})();
+</script>
+</body>
+</html>

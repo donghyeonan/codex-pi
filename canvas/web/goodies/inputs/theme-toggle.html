@@ -1,0 +1,117 @@
+<!doctype html>
+<!-- pi-canvas goodie: Theme Toggle. Original implementation. Inspired by Reacticx animated-theme-toggle (MIT) -->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Theme Toggle</title>
+<style>
+  :root{--bg:#0a0a0b;--glow:rgba(110,92,240,.16);--card:#141417;--edge:rgba(255,255,255,.08);--text:#ececef;--muted:#86858f;
+    --skel:#26262c;--skel2:#1d1d22;--accent:#8b7bff;--btn:#1f1f24;--icon:#e9e7ff}
+  [data-theme="light"]{--bg:#eef0f4;--glow:rgba(255,190,90,.35);--card:#ffffff;--edge:rgba(15,20,40,.08);--text:#15161a;--muted:#6b6e78;
+    --skel:#e6e8ee;--skel2:#f2f3f7;--accent:#f59e0b;--btn:#fff6e6;--icon:#f59e0b}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(70% 60% at 50% 0%,var(--glow),transparent 70%),var(--bg);
+    display:grid;place-items:center;overflow:hidden;color:var(--text);
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body,.card,.tile,.bar,.ln,.tg{transition:background-color .5s,color .5s,box-shadow .5s}
+  .vt body,.vt .card,.vt .tile,.vt .bar,.vt .ln,.vt .tg{transition:none}
+  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+  .card{width:min(330px,calc(100vw - 32px));border-radius:18px;background:var(--card);
+    box-shadow:0 0 0 1px var(--edge),0 24px 50px -28px rgba(0,0,0,.55);padding:16px}
+  .head{display:flex;align-items:center;gap:12px}
+  .head .t{font-size:15px;font-weight:650;letter-spacing:-.01em}
+  .head .s{font-size:12px;color:var(--muted);margin-top:3px;height:15px;overflow:hidden}
+  .head .s span{display:block}
+  .grow{flex:1}
+  .tg{width:44px;height:44px;border-radius:14px;border:0;padding:0;cursor:pointer;display:grid;place-items:center;outline:none;
+    background:var(--btn);box-shadow:inset 0 0 0 1px var(--edge);color:var(--icon);-webkit-tap-highlight-color:transparent}
+  .tg:focus-visible{box-shadow:inset 0 0 0 1px var(--edge),0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}
+  .tg:active svg{scale:.88}
+  .tg svg{width:24px;height:24px;transition:transform .6s cubic-bezier(.3,1.4,.5,1),scale .2s}
+  .tg .core{transform-origin:12px 12px;transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+  .tg .bite{transition:transform .55s cubic-bezier(.4,0,.2,1)}
+  .tg .rays{transform-origin:12px 12px;transition:transform .55s cubic-bezier(.3,1.4,.5,1),opacity .3s}
+  [data-theme="light"] .tg svg{transform:rotate(90deg)}
+  [data-theme="light"] .tg .core{transform:scale(.56)}
+  [data-theme="light"] .tg .bite{transform:translate(12px,-10px)}
+  [data-theme="dark"] .tg svg{transform:rotate(-30deg)}
+  [data-theme="dark"] .tg .rays{transform:scale(.4) rotate(-60deg);opacity:0}
+  .prev{display:grid;grid-template-columns:62px 1fr;gap:10px;margin-top:14px;padding-top:14px;box-shadow:0 -1px 0 var(--edge)}
+  .side{display:flex;flex-direction:column;gap:8px}
+  .ln{height:7px;border-radius:4px;background:var(--skel)}
+  .ln.a{background:var(--accent);opacity:.9;width:80%}
+  .main{display:flex;flex-direction:column;gap:9px}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tile{border-radius:10px;background:var(--skel2);box-shadow:inset 0 0 0 1px var(--edge);padding:8px 10px}
+  .tile b{display:block;font-size:14px;font-weight:650;letter-spacing:-.01em}
+  .tile small{font-size:10.5px;color:var(--muted)}
+  .chart{display:flex;align-items:flex-end;gap:5px;height:34px}
+  .bar{flex:1;border-radius:3px 3px 1px 1px;background:var(--skel)}
+  .bar.hi{background:var(--accent)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="grow">
+      <div class="t">Appearance</div>
+      <div class="s"><span id="mode">Dark · easy on the eyes</span></div>
+    </div>
+    <button class="tg" id="tg" type="button" aria-label="Switch to light theme">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <defs><mask id="moon"><rect width="24" height="24" fill="#fff"/><circle class="bite" cx="17" cy="7.5" r="7.2" fill="#000"/></mask></defs>
+        <circle class="core" cx="12" cy="12" r="8.6" fill="currentColor" mask="url(#moon)"/>
+        <g class="rays" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 1.6v2.2M12 20.2v2.2M1.6 12h2.2M20.2 12h2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>
+        </g>
+      </svg>
+    </button>
+  </div>
+  <div class="prev" aria-hidden="true">
+    <div class="side"><div class="ln a"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div><div class="ln" style="width:84%"></div><div class="ln" style="width:58%"></div></div>
+    <div class="main">
+      <div class="tiles">
+        <div class="tile"><b>3h 20m</b><small>Focus today</small></div>
+        <div class="tile"><b>12 / 16</b><small>Tasks done</small></div>
+      </div>
+      <div class="chart"><i class="bar" style="height:40%"></i><i class="bar" style="height:65%"></i><i class="bar" style="height:50%"></i><i class="bar hi" style="height:92%"></i><i class="bar" style="height:72%"></i><i class="bar" style="height:58%"></i><i class="bar" style="height:80%"></i></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var html=document.documentElement,tg=document.getElementById('tg'),mode=document.getElementById('mode');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var auto=!reduce,timer;
+  var copy={dark:'Dark · easy on the eyes',light:'Light · crisp and bright'};
+  function apply(t){
+    html.dataset.theme=t;
+    tg.setAttribute('aria-label','Switch to '+(t==='dark'?'light':'dark')+' theme');
+    mode.textContent=copy[t];
+  }
+  function flip(){
+    var next=html.dataset.theme==='dark'?'light':'dark';
+    if(reduce||!document.startViewTransition){apply(next);return}
+    var r=tg.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+    var R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+    html.classList.add('vt');
+    var vt;
+    try{vt=document.startViewTransition(function(){apply(next)})}catch(e){html.classList.remove('vt');apply(next);return}
+    vt.ready.then(function(){
+      html.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+R+'px at '+x+'px '+y+'px)']},
+        {duration:650,easing:'cubic-bezier(.65,0,.25,1)',pseudoElement:'::view-transition-new(root)'});
+    }).catch(function(){});
+    vt.finished.then(function(){html.classList.remove('vt')},function(){html.classList.remove('vt')});
+    mode.animate([{transform:'translateY(8px)',opacity:0},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  tg.addEventListener('click',function(){if(auto){auto=false;clearInterval(timer)}flip()});
+  if(auto)timer=setInterval(flip,2800);
+})();
+</script>
+</body>
+</html>

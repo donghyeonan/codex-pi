@@ -1,0 +1,154 @@
+<!doctype html>
+<!-- pi-canvas goodie: Morphing Tab Bar. Original implementation. Inspired by Reacticx morphing-tabbar / masked-tab-bar (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morphing Tab Bar</title>
+<style>
+  :root { --accent: #7c6cff; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 30px; background: #0a0a0b;
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased; color: #f2f2f5;
+    padding-bottom: clamp(10px, 6vh, 22px); box-sizing: border-box;
+  }
+  .glow { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(50% 45% at 50% 100%, var(--accent), transparent 70%); opacity: .16; transition: background .6s; }
+  .screen { width: min(92vw, 360px); flex: 1; max-height: 170px; position: relative; overflow: hidden; }
+  .page { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 4px 0; box-sizing: border-box; transition: opacity .45s, transform .55s cubic-bezier(.2, .9, .3, 1); }
+  .page.out { opacity: 0; transform: translateX(calc(var(--dir) * -24px)); transition-duration: .18s, .3s; }
+  .page:not(.out) { transition-delay: .12s; }
+  .page.in { opacity: 0; transform: translateX(calc(var(--dir) * 24px)); transition: none; }
+  .page h2 { margin: 0; font-size: 26px; font-weight: 750; letter-spacing: -.02em; }
+  .page p { margin: -6px 0 0; font-size: 12.5px; color: #8b8b96; }
+  .tiles { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; flex: 1; max-height: 82px; }
+  .tiles i { border-radius: 14px; background: #17171b; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); position: relative; overflow: hidden; }
+  .tiles i:first-child { background: linear-gradient(140deg, var(--accent), #17171b 85%); }
+  .tiles i::after { content: ""; position: absolute; left: 10px; right: 30%; bottom: 10px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); }
+  .bar { position: relative; width: min(92vw, 360px); height: 64px; flex: none; }
+  .bar svg.bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 12px 24px rgba(0,0,0,.55)); }
+  .tabs { position: absolute; inset: 0 22px; display: flex; }
+  .tab {
+    flex: 1; border: 0; background: none; padding: 0; color: #8b8b96; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; font: 600 10.5px/1 ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif; letter-spacing: .01em; outline: none; transition: color .3s;
+  }
+  .tab svg { width: 22px; height: 22px; transition: transform .45s cubic-bezier(.3, 1.6, .5, 1), opacity .25s; }
+  .tab span { transition: transform .45s cubic-bezier(.3, 1.4, .5, 1); }
+  .tab[aria-selected="true"] { color: #f2f2f5; }
+  .tab[aria-selected="true"] svg { transform: translateY(-22px) scale(.4); opacity: 0; }
+  .tab[aria-selected="true"] span { transform: translateY(9px); }
+  .tab:focus-visible span { text-decoration: underline; text-underline-offset: 3px; }
+  .bubble {
+    position: absolute; left: 0; top: -24px; width: 50px; height: 50px; margin-left: -25px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.35), transparent 55%), var(--accent);
+    box-shadow: 0 10px 24px -4px var(--accent), inset 0 -3px 6px rgba(0,0,0,.25); display: grid; place-items: center; color: #fff;
+    transition: background-color .4s, box-shadow .4s;
+  }
+  .bubble svg { width: 22px; height: 22px; }
+  .bubble svg.pop { animation: pop .45s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes pop { from { transform: scale(.3) rotate(-30deg); opacity: 0; } }
+</style>
+</head>
+<body>
+  <div class="glow" id="glow"></div>
+  <div class="screen" id="screen"></div>
+  <div class="bar">
+    <svg class="bg" id="bg" aria-hidden="true">
+      <defs>
+        <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232329"/><stop offset="1" stop-color="#141417"/></linearGradient>
+        <mask id="m"><rect id="mr" x="0" y="0" height="64" fill="#fff"/><path id="notch" fill="#000"/></mask>
+      </defs>
+      <rect id="shape" x="0" y="0" height="64" rx="22" fill="url(#fill)" mask="url(#m)"/>
+    </svg>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="bubble" id="bubble"></div>
+  </div>
+<script>
+(() => {
+  const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const tabs = [
+    ['Home', '#7c6cff', '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>', 'Good morning, Maya', '3 new drafts since yesterday'],
+    ['Search', '#22c3a6', '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', 'Discover', 'Trending in design systems'],
+    ['Create', '#ff8a4c', '<path d="M12 5v14M5 12h14"/>', 'New project', 'Start from a template or blank'],
+    ['Activity', '#ff5c8a', '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>', 'Activity', '12 likes · 4 comments today'],
+    ['Profile', '#4ea8ff', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', 'Maya Okafor', 'Design lead · 18.4K followers'],
+  ];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tabsEl = document.getElementById('tabs'), bubble = document.getElementById('bubble'), screen = document.getElementById('screen');
+  const notch = document.getElementById('notch'), shape = document.getElementById('shape'), mr = document.getElementById('mr'), bg = document.getElementById('bg');
+  const root = document.documentElement.style;
+
+  const btns = tabs.map((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.setAttribute('role', 'tab'); b.innerHTML = I(t[2]) + `<span>${t[0]}</span>`;
+    b.addEventListener('click', () => { stopAuto(); select(i); });
+    tabsEl.appendChild(b); return b;
+  });
+
+  let active = -1, x = 0, v = 0, target = 0, last = performance.now(), W = 0, page = null, auto = !reduce, timer;
+  const centre = i => { const r = btns[i].getBoundingClientRect(), p = bg.getBoundingClientRect(); return r.left - p.left + r.width / 2; };
+
+  function draw() {
+    const stretch = Math.min(0.55, Math.abs(v) / 1400);
+    const hw = 37 + stretch * 26, d = 28 - stretch * 6;
+    notch.setAttribute('d', `M${x - hw} -1 L${x - hw} 0 C${x - hw * .7} 0 ${x - hw * .72} ${d} ${x} ${d} C${x + hw * .72} ${d} ${x + hw * .7} 0 ${x + hw} 0 L${x + hw} -1Z`);
+    bubble.style.transform = `translateX(${x.toFixed(2)}px) translateY(${(stretch * 6).toFixed(2)}px) scale(${1 + stretch}, ${1 - stretch * .45})`;
+  }
+  function step(now) {
+    const dt = Math.min(0.032, (now - last) / 1000); last = now;
+    v += ((target - x) * 220 - v * 22) * dt;
+    x += v * dt;
+    draw();
+    requestAnimationFrame(step);
+  }
+  function renderPage(i, dir) {
+    const t = tabs[i];
+    const el = document.createElement('div');
+    el.className = 'page' + (page ? ' in' : ''); el.style.setProperty('--dir', dir);
+    el.setAttribute('role', 'tabpanel');
+    el.innerHTML = `<h2>${t[3]}</h2><p>${t[4]}</p><div class="tiles"><i></i><i></i><i></i></div>`;
+    screen.appendChild(el);
+    if (page) {
+      const old = page; old.style.setProperty('--dir', dir); old.classList.add('out');
+      setTimeout(() => old.remove(), 550);
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('in')));
+    }
+    page = el;
+  }
+  function select(i) {
+    if (i === active) return;
+    const dir = i > active ? 1 : -1;
+    btns.forEach((b, k) => { b.setAttribute('aria-selected', k === i); b.tabIndex = k === i ? 0 : -1; });
+    active = i; target = centre(i);
+    root.setProperty('--accent', tabs[i][1]);
+    bubble.innerHTML = I(tabs[i][2]); bubble.firstChild.classList.add('pop');
+    renderPage(i, dir);
+    if (reduce) { x = target; v = 0; draw(); }
+  }
+  function layout() {
+    W = bg.getBoundingClientRect().width;
+    bg.setAttribute('viewBox', `0 0 ${W} 64`);
+    shape.setAttribute('width', W); mr.setAttribute('width', W);
+    if (active >= 0) { target = centre(active); x = target; v = 0; draw(); }
+  }
+  function stopAuto() { auto = false; clearInterval(timer); }
+
+  tabsEl.addEventListener('keydown', e => {
+    const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!d) return;
+    e.preventDefault(); stopAuto();
+    const n = (active + d + tabs.length) % tabs.length; select(n); btns[n].focus();
+  });
+  addEventListener('resize', layout);
+
+  layout(); select(0); x = target; draw();
+  if (!reduce) {
+    requestAnimationFrame(t => { last = t; requestAnimationFrame(step); });
+    const seq = [1, 3, 2, 4, 0];
+    let k = 0;
+    timer = setInterval(() => auto && select(seq[k++ % seq.length]), 2500);
+  }
+})();
+</script>
+</body>
+</html>

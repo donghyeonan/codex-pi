@@ -1,0 +1,155 @@
+<!doctype html>
+<!-- pi-canvas goodie: Fan Menu. Original implementation. Inspired by Reacticx fan-menu / morph-fab (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fan Menu</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; background: #0a0a0b; position: relative;
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased; color: #f2f2f5;
+  }
+  .scrim {
+    position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .4s;
+    background: radial-gradient(60% 70% at 50% 100%, rgba(255, 122, 89, .22), rgba(10,10,11,.6) 70%);
+  }
+  .open .scrim { opacity: 1; }
+  .feed { position: absolute; left: 50%; top: 22px; width: min(84vw, 330px); transform: translateX(-50%); display: grid; gap: 10px; transition: filter .4s, opacity .4s; }
+  .open .feed { filter: blur(3px); opacity: .45; }
+  .row { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: #141417; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+  .row i { width: 36px; height: 36px; border-radius: 10px; flex: none; }
+  .row div { flex: 1; display: grid; gap: 3px; font-size: 13px; font-weight: 600; }
+  .row span { font-size: 11.5px; font-weight: 400; color: #7d7d88; }
+  .row em { font-style: normal; font-size: 11px; color: #5f5f6a; align-self: flex-start; }
+  .stage { position: absolute; left: 50%; bottom: 34px; width: 0; height: 0; }
+  .fab, .act { position: absolute; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; outline: none; }
+  .fab {
+    width: 60px; height: 60px; left: -30px; top: -30px; z-index: 2; color: #fff;
+    background: radial-gradient(circle at 35% 25%, #ffb199, #ff6a4a 55%, #e2412e);
+    box-shadow: 0 12px 28px -6px rgba(255, 90, 60, .65), inset 0 1px 0 rgba(255,255,255,.4); transition: transform .5s cubic-bezier(.3, 1.6, .5, 1);
+  }
+  .fab:active { transform: scale(.92); }
+  .fab svg { transition: transform .55s cubic-bezier(.3, 1.6, .5, 1); }
+  .open .fab svg { transform: rotate(135deg); }
+  .fab::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(255, 120, 90, .5); animation: pulse 2.4s ease-out infinite; }
+  .open .fab::after { animation: none; opacity: 0; }
+  @keyframes pulse { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+  .act { width: 50px; height: 50px; left: -25px; top: -25px; color: #fff; background: var(--c); box-shadow: 0 10px 22px -8px var(--c), inset 0 1px 0 rgba(255,255,255,.35); will-change: transform; }
+  .act:focus-visible, .act.hl { box-shadow: 0 0 0 3px #0a0a0b, 0 0 0 5px var(--c), 0 12px 24px -6px var(--c); }
+  .lbl {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px); white-space: nowrap; pointer-events: none;
+    font-size: 11.5px; font-weight: 600; padding: 5px 9px; border-radius: 8px; background: rgba(28,28,32,.92); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.3, 1.6, .5, 1);
+  }
+  .act:hover .lbl, .act:focus-visible .lbl, .act.hl .lbl { opacity: 1; transform: translate(-50%, 0); }
+  .toast {
+    position: absolute; left: 50%; top: 18px; transform: translate(-50%, -70px); padding: 9px 14px 9px 10px; border-radius: 14px; display: flex; gap: 8px; align-items: center;
+    font-size: 12.5px; font-weight: 600; background: #1c1c21; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 0 14px 30px rgba(0,0,0,.5);
+    transition: transform .55s cubic-bezier(.3, 1.5, .5, 1); z-index: 3; white-space: nowrap;
+  }
+  .toast.show { transform: translate(-50%, 0); }
+  .toast i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--c, #333); }
+</style>
+</head>
+<body>
+  <div class="feed" aria-hidden="true">
+    <div class="row"><i style="background:linear-gradient(135deg,#6b5cff,#2fd3c0)"></i><div>Studio walkthrough<span>Voice memo · 2:14</span></div><em>9:41</em></div>
+    <div class="row"><i style="background:linear-gradient(135deg,#ffb36b,#ff5c8a)"></i><div>Golden hour at Ocean Beach<span>12 photos · San Francisco</span></div><em>Tue</em></div>
+    <div class="row"><i style="background:linear-gradient(135deg,#4ea8ff,#7c6cff)"></i><div>Design review with Theo<span>Friday · 10:30 – 11:15</span></div><em>Mon</em></div>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <div class="toast" id="toast"><i id="ticon"></i><span id="ttext"></span></div>
+  <div class="stage" id="stage">
+    <button class="fab" id="fab" aria-expanded="false" aria-label="Create">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+<script>
+(() => {
+  const P = 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  const actions = [
+    ['Photo', '#2fbf9f', `<path d="M4 8h3l2-3h6l2 3h3v11H4z" ${P}/><circle cx="12" cy="13" r="3.2" ${P}/>`, 'Camera ready'],
+    ['Note', '#f5b83d', `<path d="M5 4h10l4 4v12H5z" ${P}/><path d="M9 12h6M9 16h4" ${P}/>`, 'New note created'],
+    ['Voice', '#ff5c8a', `<rect x="9" y="3" width="6" height="11" rx="3" ${P}/><path d="M6 11a6 6 0 0 0 12 0M12 17v4" ${P}/>`, 'Recording voice memo'],
+    ['Place', '#4ea8ff', `<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z" ${P}/><circle cx="12" cy="10" r="2.2" ${P}/>`, 'Location pinned'],
+    ['Event', '#9b7bff', `<rect x="4" y="5" width="16" height="15" rx="2" ${P}/><path d="M4 10h16M9 3v4M15 3v4" ${P}/>`, 'Event drafted for Friday'],
+  ];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stage = document.getElementById('stage'), fab = document.getElementById('fab');
+  const toast = document.getElementById('toast');
+  const R = 118, SPREAD = 140;                       // radius and arc spread (degrees), fanning upwards
+  const items = actions.map((a, i) => {
+    const b = document.createElement('button');
+    b.className = 'act'; b.style.setProperty('--c', a[1]); b.tabIndex = -1; b.setAttribute('aria-label', a[0]);
+    b.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24">${a[2]}</svg><span class="lbl">${a[0]}</span>`;
+    stage.insertBefore(b, fab);
+    const ang = (-90 - SPREAD / 2 + SPREAD * i / (actions.length - 1)) * Math.PI / 180;
+    const it = { el: b, ang, p: 0, v: 0, target: 0, delay: 0, a };
+    b.addEventListener('click', () => { stopAuto(); pick(it); });
+    b.addEventListener('pointerenter', () => { stopAuto(); highlight(null); });
+    return it;
+  });
+
+  let open = false, auto = !reduce, last = performance.now(), timers = [];
+  function render(it) {
+    const p = it.p, x = Math.cos(it.ang) * R * p, y = Math.sin(it.ang) * R * p;
+    const s = Math.max(0, Math.min(1.15, p));
+    it.el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${s.toFixed(3)}) rotate(${((1 - p) * -120).toFixed(1)}deg)`;
+    it.el.style.opacity = Math.min(1, Math.max(0, p * 1.6)).toFixed(3);
+    it.el.style.visibility = p < 0.02 && it.target === 0 ? 'hidden' : 'visible';
+  }
+  function step(now) {
+    const dt = Math.min(0.032, (now - last) / 1000); last = now;
+    items.forEach(it => {
+      if (it.delay > 0) { it.delay -= dt; return; }
+      it.v += ((it.target - it.p) * 190 - it.v * 14) * dt;   // underdamped spring -> overshoot
+      it.p += it.v * dt;
+      render(it);
+    });
+    requestAnimationFrame(step);
+  }
+  function setOpen(v) {
+    open = v;
+    document.body.classList.toggle('open', v);
+    fab.setAttribute('aria-expanded', v);
+    const n = items.length;
+    items.forEach((it, i) => {
+      it.target = v ? 1 : 0;
+      it.delay = (v ? i : n - 1 - i) * 0.045;
+      it.el.tabIndex = v ? 0 : -1;
+      if (reduce) { it.p = it.target; it.delay = 0; render(it); }
+    });
+    if (!v) highlight(null);
+  }
+  function highlight(it) { items.forEach(o => o.el.classList.toggle('hl', o === it)); }
+  function pick(it) {
+    document.getElementById('ticon').style.setProperty('--c', it.a[1]);
+    document.getElementById('ticon').innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24">${it.a[2]}</svg>`;
+    document.getElementById('ttext').textContent = it.a[3];
+    toast.classList.add('show');
+    clearTimeout(pick.t); pick.t = setTimeout(() => toast.classList.remove('show'), 1800);
+    setOpen(false);
+  }
+  function stopAuto() { if (!auto) return; auto = false; timers.forEach(clearTimeout); highlight(null); }
+
+  fab.addEventListener('click', () => { stopAuto(); setOpen(!open); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && open) { stopAuto(); setOpen(false); fab.focus(); } });
+  document.addEventListener('pointerdown', e => { if (open && !e.target.closest('.act, .fab')) { stopAuto(); setOpen(false); } });
+
+  function demo() {
+    if (!auto) return;
+    const at = (ms, fn) => timers.push(setTimeout(() => auto && fn(), ms));
+    at(500, () => setOpen(true));
+    [1, 2, 3].forEach((k, j) => at(1300 + j * 650, () => highlight(items[k])));
+    at(3400, () => { highlight(null); pick(items[2]); });
+    at(5600, demo);
+  }
+  items.forEach(render);
+  if (reduce) setOpen(true);
+  else { requestAnimationFrame(t => { last = t; requestAnimationFrame(step); }); demo(); }
+})();
+</script>
+</body>
+</html>

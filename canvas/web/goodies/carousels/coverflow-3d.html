@@ -1,0 +1,129 @@
+<!doctype html>
+<!-- pi-canvas goodie: 3D Carousel. Original implementation. Inspired by Reacticx 3d-carousel (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Carousel</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; --s: min(118px, 34vh); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0a0c; }
+  body { font-family: var(--sans); color: #fff; -webkit-font-smoothing: antialiased; user-select: none;
+    background: radial-gradient(70% 55% at 50% 42%, #1a1726 0%, #0a0a0c 70%); }
+  .floor { position: absolute; left: 50%; top: 58%; width: 72%; height: 26%; transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(closest-side, var(--accent, #7c5cff) 0%, transparent 100%); opacity: .22; filter: blur(18px); transition: background .8s; }
+  .scene { position: absolute; inset: 0 0 76px; perspective: 820px; perspective-origin: 50% 30%; touch-action: pan-y; cursor: grab; }
+  .scene.drag { cursor: grabbing; }
+  .ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+  .card { position: absolute; width: var(--s); height: var(--s); left: calc(var(--s) / -2); top: calc(var(--s) / -2); border-radius: 10px;
+    background: var(--bg); overflow: hidden; cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.1) inset, 0 18px 30px -10px rgba(0,0,0,.7);
+    -webkit-box-reflect: below 5px linear-gradient(transparent 55%, rgba(255,255,255,.22)); }
+  .card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(125deg, rgba(255,255,255,.28), transparent 38%, transparent 70%, rgba(0,0,0,.25)); }
+  .card span { position: absolute; left: 8px; top: 7px; font-size: 8px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink, rgba(255,255,255,.85)); z-index: 1; }
+  .cap { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 16px; border-radius: 999px;
+    background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .cap .txt { width: 132px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cap b { display: block; font-size: 13px; font-weight: 650; letter-spacing: -.01em; }
+  .cap small { display: block; font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+  .cap .txt > * { transition: opacity .25s, transform .25s; }
+  .cap .txt.swap > * { opacity: 0; transform: translateY(4px); }
+  .play { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #fff; color: #0a0a0c; display: grid; place-items: center; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,255,255,.15); transition: transform .2s; }
+  .play:active { transform: scale(.92); }
+  .play:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .scene:focus { outline: none; }
+  .bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
+  .bars i { width: 3px; border-radius: 2px; background: var(--accent, #7c5cff); height: 30%; animation: eq 1s ease-in-out infinite; }
+  .bars i:nth-child(2) { animation-delay: -.3s; } .bars i:nth-child(3) { animation-delay: -.6s; } .bars i:nth-child(4) { animation-delay: -.15s; }
+  .paused .bars i { animation-play-state: paused; }
+  @keyframes eq { 50% { height: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .bars i { animation: none; height: 60%; } }
+</style>
+</head>
+<body>
+<div class="floor"></div>
+<div class="scene" id="scene" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Albums"><div class="ring" id="ring"></div></div>
+<div class="cap"><div class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="txt" id="txt"><b id="tt"></b><small id="ta"></small></div>
+  <button class="play" id="play" aria-label="Pause"><svg id="ico" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button></div>
+<script>
+(() => {
+  const ALBUMS = [
+    ['Neon Tides', 'Aria Vale', '#7c5cff', 'conic-gradient(from 210deg at 30% 70%, #ff5ea8, #7c5cff, #23d5ff, #ff5ea8)'],
+    ['Paper Moons', 'The Lanterns', '#f2b24c', 'radial-gradient(circle at 62% 58%, #f2b24c 0 26%, transparent 26.5%), radial-gradient(circle at 40% 42%, #e4572e 0 18%, transparent 18.5%), #f4ecdc', '#2b2118'],
+    ['Static Bloom', 'Koji Mura', '#ff6b6b', 'repeating-radial-gradient(circle at 50% 120%, #ff6b6b 0 9px, #2a0f2e 9px 18px)'],
+    ['Glass Hours', 'Mira Sol', '#5ee6c1', 'repeating-linear-gradient(135deg, rgba(255,255,255,.18) 0 2px, transparent 2px 14px), linear-gradient(160deg, #5ee6c1, #1f6f8b 60%, #13294b)'],
+    ['Vapor Avenue', 'Night Drive', '#ff4fd8', 'linear-gradient(transparent 58%, #1a0533 58%), repeating-linear-gradient(90deg, transparent 0 15px, rgba(255,79,216,.6) 15px 16px) 0 100%/100% 42% no-repeat, radial-gradient(circle at 50% 58%, #ffd26b 0 24%, transparent 24.5%), linear-gradient(#2a0a52, #ff4fd8)'],
+    ['Low Tide', 'Orca Club', '#3aa0ff', 'radial-gradient(ellipse 70% 30% at 50% 100%, #0b2d5b 98%, transparent), radial-gradient(ellipse 90% 30% at 30% 82%, #1d5fae 98%, transparent), radial-gradient(ellipse 90% 30% at 75% 66%, #3aa0ff 98%, transparent), #bfe3ff'],
+    ['Golden Static', 'Lumen', '#ffcc4d', 'radial-gradient(circle, #ffcc4d 0 1.5px, transparent 2px) 0 0/9px 9px, radial-gradient(circle at 50% 50%, #3a2a05, #0e0b04)'],
+    ['Northbound', 'Fjord', '#9fd4ff', 'conic-gradient(from 135deg at 50% 45%, #e8f4ff 0 90deg, transparent 0), conic-gradient(from 140deg at 25% 62%, #6d8fb0 0 80deg, transparent 0), conic-gradient(from 140deg at 78% 58%, #4a6a8c 0 80deg, transparent 0), linear-gradient(#24364d, #9fd4ff)'],
+  ];
+  const N = ALBUMS.length, STEP = 360 / N;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ring = document.getElementById('ring'), scene = document.getElementById('scene');
+  const cards = ALBUMS.map((a, i) => {
+    const el = document.createElement('div');
+    el.className = 'card'; el.style.setProperty('--bg', a[3]); if (a[4]) el.style.setProperty('--ink', a[4]);
+    el.innerHTML = `<span>${a[0]}</span>`; el.setAttribute('aria-label', `${a[0]} by ${a[1]}`);
+    el.addEventListener('click', () => { if (moved) return; stop(); target = nearest(-i * STEP); });
+    ring.appendChild(el); return el;
+  });
+  const radius = () => Math.max(120, Math.min(innerWidth * .3, 205, innerHeight * .62));
+  const nearest = a => target + (((a - target) % 360) + 540) % 360 - 180;
+  let ang = 0, target = 0, vel = 0, drag = null, moved = false, active = -1, timer = 0, playing = true;
+
+  function render() {
+    const r = radius();
+    ring.style.transform = `translateZ(${-r * .62}px) rotateX(-9deg) rotateY(${ang}deg)`;
+    cards.forEach((el, i) => {
+      el.style.transform = `rotateY(${i * STEP}deg) translateZ(${r}px)`;
+      const rel = ((((i * STEP + ang) % 360) + 540) % 360) - 180, c = Math.cos(rel * Math.PI / 180);
+      el.style.filter = c > 0 ? `brightness(${.4 + .6 * c ** 1.4})` : `brightness(${.32 + .1 * c}) blur(${-c * 1.5}px)`;
+      el.firstChild.style.opacity = c > 0 ? 1 : 0;
+    });
+    const ai = ((Math.round(-ang / STEP) % N) + N) % N;
+    if (ai !== active) {
+      active = ai;
+      const t = document.getElementById('txt'); t.classList.add('swap');
+      setTimeout(() => { document.getElementById('tt').textContent = ALBUMS[ai][0]; document.getElementById('ta').textContent = ALBUMS[ai][1]; t.classList.remove('swap'); }, reduce ? 0 : 180);
+      document.body.style.setProperty('--accent', ALBUMS[ai][2]);
+    }
+  }
+  function tick() {
+    if (!drag) { const f = (target - ang) * .09; vel = vel * .7 + f; ang += vel; }
+    render(); requestAnimationFrame(tick);
+  }
+  const snap = () => { target = Math.round(target / STEP) * STEP; if (reduce) { ang = target; render(); } };
+  const advance = () => { target = Math.round(target / STEP) * STEP - STEP; };
+  if (!reduce) timer = setInterval(advance, 2600);
+  function stop() { clearInterval(timer); timer = 0; }
+
+  scene.addEventListener('pointerdown', e => {
+    stop(); moved = false; drag = { x: e.clientX, a: ang, lx: e.clientX, lt: performance.now(), v: 0 };
+    scene.setPointerCapture(e.pointerId); scene.classList.add('drag');
+  });
+  scene.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const now = performance.now(), k = 180 / (radius() * Math.PI);
+    if (Math.abs(e.clientX - drag.x) > 4) moved = true;
+    ang = drag.a + (e.clientX - drag.x) * k;
+    drag.v = (e.clientX - drag.lx) * k / Math.max(1, now - drag.lt) * 16; drag.lx = e.clientX; drag.lt = now;
+    target = ang; if (reduce) render();
+  });
+  const end = () => { if (!drag) return; target = ang + drag.v * 10; drag = null; vel = 0; scene.classList.remove('drag'); snap(); setTimeout(() => moved = false, 0); };
+  scene.addEventListener('pointerup', end); scene.addEventListener('pointercancel', end);
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { stop(); target = Math.round(target / STEP) * STEP + (e.key === 'ArrowLeft' ? STEP : -STEP); if (reduce) { ang = target; render(); } }
+  });
+  const play = document.getElementById('play');
+  play.onclick = () => {
+    stop(); playing = !playing; document.body.classList.toggle('paused', !playing);
+    play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    document.getElementById('ico').innerHTML = playing ? '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>' : '<path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/>';
+  };
+  render();
+  if (reduce) addEventListener('resize', render); else requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

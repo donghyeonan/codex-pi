@@ -1,0 +1,144 @@
+<!doctype html>
+<!-- pi-canvas goodie: Liquid Metal. Original implementation. Inspired by Reacticx liquid-metal (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liquid Metal</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #0b0b0d; overflow: hidden; }
+  body { position: relative; cursor: grab; touch-action: none; }
+  body:active { cursor: grabbing; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .fb { position: absolute; inset: 0; display: none; place-items: center; }
+  .fb i { width: 46%; aspect-ratio: 1.6; border-radius: 48% 52% 44% 56% / 55% 42% 58% 45%;
+    background: linear-gradient(170deg, #f4f6fa 0%, #9aa3b2 34%, #1d2026 50%, #c9ced8 64%, #4a505c 100%);
+    box-shadow: 0 30px 60px rgba(0,0,0,.6), inset 0 2px 6px #fff; }
+  .hint { position: absolute; left: 0; right: 0; bottom: clamp(8px, 5%, 18px); text-align: center;
+    font: 500 11px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(220, 225, 235, .38); pointer-events: none; user-select: none; transition: opacity .6s; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="Liquid chrome blobs that merge and follow the pointer"></canvas>
+<div class="fb" id="fb"><i></i></div>
+<div class="hint" id="hint">Drag to stir · hold to gather</div>
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  const N = 5;
+  const VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  const FS = `precision highp float;
+uniform vec2 R;uniform float T;uniform vec3 B[${N}];uniform vec2 L;
+const float K=.13,R0=.11;
+float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
+float sd(vec2 p){float d=1e3;for(int i=0;i<${N};i++){d=smin(d,length(p-B[i].xy)-B[i].z,K);}return d;}
+float Hh(vec2 p){float e=clamp(-sd(p),0.,R0);float h=sqrt(R0*R0-(R0-e)*(R0-e));
+ return h+.006*sin(p.x*21.+T*1.1)*sin(p.y*17.-T*.8)*(e/R0);}
+vec3 env(vec3 r){
+ float y=r.y*.9+r.x*.22+.07*sin(r.x*4.+T*.35);
+ vec3 sky=mix(vec3(.86,.89,.95),vec3(.28,.33,.46),clamp(y*1.3,0.,1.));
+ vec3 gnd=mix(vec3(.16,.15,.17),vec3(.015),clamp(-y*2.2,0.,1.));
+ vec3 c=mix(gnd,sky,smoothstep(-.02,.03,y));
+ c+=vec3(1.,.97,.92)*exp(-abs(y-.015)*26.)*.85;
+ c*=.9+.1*sin(y*22.+T*.6);
+ c+=.07*(.5+.5*cos(6.2832*(y*1.4+vec3(0.,.33,.67)+T*.04)));
+ return c;
+}
+void main(){
+ float s=min(R.x,R.y);
+ vec2 p=(gl_FragCoord.xy-.5*R)/s;
+ float px=1.5/s;
+ float d=sd(p);
+ vec3 bg=vec3(.04,.04,.047)+vec3(.05,.05,.06)*exp(-dot(p,p)*3.);
+ float sh=smoothstep(.12,-.06,sd(p-vec2(.025,-.05)));
+ bg*=1.-.65*sh;
+ vec3 col=bg;
+ if(d<px){
+  float e=px;
+  float gx=(Hh(p+vec2(e,0))-Hh(p-vec2(e,0)))/(2.*e);
+  float gy=(Hh(p+vec2(0,e))-Hh(p-vec2(0,e)))/(2.*e);
+  vec3 n=normalize(vec3(-gx,-gy,1.));
+  vec3 v=normalize(vec3(p*.55,-1.));
+  vec3 r=reflect(v,n);
+  vec3 c=env(r);
+  vec3 l=normalize(vec3(L,.9));
+  c+=pow(max(dot(r,l),0.),70.)*1.4;
+  float fr=pow(1.-n.z,3.);
+  c=mix(c,c*.35,fr*.55);
+  c*=.85+.15*n.z;
+  col=mix(bg,c,smoothstep(px,-px,d));
+ }
+ col+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5)-.5)/255.;
+ gl_FragColor=vec4(col,1.);
+}`;
+  let gl = null; const U = {};
+  try { gl = cv.getContext('webgl', { antialias: false, alpha: false }); } catch (e) {}
+  if (gl) {
+    const mk = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+    const pr = gl.createProgram();
+    gl.attachShader(pr, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) gl = null;
+    else {
+      gl.useProgram(pr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      ['R', 'T', 'B', 'L'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+    }
+  }
+  if (!gl) { cv.style.display = 'none'; document.getElementById('fb').style.display = 'grid'; return; }
+
+  // orbit params per blob: [ax, ay, fx, fy, phase, radius]
+  const orb = [[.34, .16, .31, .43, 0, .17], [.42, .2, .23, .37, 2.1, .12], [.18, .24, .41, .29, 4.0, .14],
+               [.5, .12, .19, .51, 1.2, .09], [0, 0, 0, 0, 0, .1]];
+  const pos = orb.map(() => [0, 0]);
+  const ptr = { x: .25, y: .05, on: false, held: false };
+  const data = new Float32Array(N * 3);
+  let W = 0, H = 0, user = false;
+  const t0 = performance.now();
+
+  function frame(now) {
+    const t = (now - t0) / 1000 + 6;
+    W = Math.max(1, Math.round(cv.clientWidth * DPR)); H = Math.max(1, Math.round(cv.clientHeight * DPR));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; gl.viewport(0, 0, W, H); }
+    const ax = W / Math.min(W, H) * .5;
+    if (!user) { ptr.x = Math.cos(t * .5) * .32; ptr.y = Math.sin(t * .8) * .14; }
+    orb.forEach((o, i) => {
+      let tx, ty;
+      if (i === N - 1) { tx = ptr.x; ty = ptr.y; }
+      else { tx = Math.sin(t * o[2] + o[4]) * o[0] * Math.min(1, ax / .81); ty = Math.cos(t * o[3] + o[4]) * o[1]; }
+      if (ptr.held && i < N - 1) { tx = ptr.x + (tx - ptr.x) * .15; ty = ptr.y + (ty - ptr.y) * .15; }
+      const k = reduce ? 1 : (i === N - 1 ? .14 : .05);
+      pos[i][0] += (tx - pos[i][0]) * k; pos[i][1] += (ty - pos[i][1]) * k;
+      data[i * 3] = pos[i][0]; data[i * 3 + 1] = pos[i][1];
+      data[i * 3 + 2] = o[5] * (1 + .06 * Math.sin(t * 1.3 + i));
+    });
+    gl.uniform2f(U.R, W, H); gl.uniform1f(U.T, t);
+    gl.uniform3fv(U.B, data);
+    gl.uniform2f(U.L, -.5 + Math.sin(t * .3) * .3, .7);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  const hint = document.getElementById('hint');
+  const map = e => {
+    const r = cv.getBoundingClientRect(), s = Math.min(r.width, r.height);
+    ptr.x = (e.clientX - r.left - r.width / 2) / s; ptr.y = -(e.clientY - r.top - r.height / 2) / s;
+    if (!user) { user = true; hint.style.opacity = 0; }
+    if (reduce) frame(performance.now());
+  };
+  addEventListener('pointermove', e => { if (user || e.movementX || e.movementY) map(e); });
+  addEventListener('pointerdown', e => { ptr.held = true; map(e); });
+  addEventListener('pointerup', () => { ptr.held = false; if (reduce) frame(performance.now()); });
+  addEventListener('pointercancel', () => ptr.held = false);
+  addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); user = true; ptr.held = true; } });
+  addEventListener('keyup', e => { if (e.key === ' ') ptr.held = false; });
+  addEventListener('resize', () => reduce && frame(performance.now()));
+  if (reduce) { for (let i = 0; i < 1; i++) frame(t0); } else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
