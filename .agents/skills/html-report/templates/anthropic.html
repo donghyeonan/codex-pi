@@ -42,7 +42,6 @@ pre code{background:none;padding:0}
 .note{border-left:2px solid var(--clay);padding-left:14px;color:var(--slate)}   /* 단서·한계 */
 details{margin:12px 0}
 summary{cursor:pointer;color:var(--slate)}
-.check{background:var(--panel);border-radius:14px;padding:18px 22px;margin-top:24px}
 
 @media(max-width:640px){main{padding:40px 16px 80px}h1{font-size:34px}h2{font-size:25px}body{font-size:16px}}
 </style>
@@ -50,11 +49,11 @@ summary{cursor:pointer;color:var(--slate)}
 <body><main>
 <div class="eye">분류</div>
 <h1>제목</h1>
-<p class="lead">무엇이 막혔고, 다 읽으면 무엇을 알게 되는지 한두 문장.</p>
+<p class="lead">결론을 한두 문장으로 먼저.</p>
 
 <section id="s1">
-  <h2>독자의 질문 하나에 답하는 제목</h2>
-  <p>첫 문장이 답. 이어서 구체적인 예 하나를 따라가며 이유를 설명한다.</p>
+  <h2>이 절의 결론을 담은 제목</h2>
+  <p>첫 문장이 결론. 다음 문장은 직전 문장의 단어를 받아 이어 간다.</p>
   <figure>
     <svg viewBox="0 0 460 48" role="img" aria-label="막대 그래프">
       <text x="112" y="15" text-anchor="end">항목 A</text><rect class="bar" x="120" y="4" width="240" height="14" rx="2"/><text x="366" y="15">120</text>
@@ -62,7 +61,11 @@ summary{cursor:pointer;color:var(--slate)}
     </svg>
     <figcaption>무엇을 보면 되는지 · 출처</figcaption>
   </figure>
-  <p>그래서 이 자료가 말하는 것. 앞 문단에서 이어지게.</p>
+  <p>그래서 이 자료가 말하는 것.</p>
+  <figure>
+    <img src="data:image/png;base64,..." alt="원본 캡처가 보여 주는 내용">
+    <figcaption>원본 캡처: 무엇을 보면 되는지 · 출처</figcaption>
+  </figure>
   <figure>
     <blockquote>원문 대목 그대로. [중략]</blockquote>
     <figcaption>저자, 연도 · <a href="#">링크</a></figcaption>
@@ -70,13 +73,5 @@ summary{cursor:pointer;color:var(--slate)}
   <p class="note">단서나 한계는 필요한 곳에 한 번.</p>
 </section>
 
-<hr>
-<section id="summary">
-  <h2>정리</h2>
-  <p>한 문단 요약.</p>
-  <div class="check">
-    <details><summary>스스로 확인: 질문</summary><p>답과 근거가 있는 절.</p></details>
-  </div>
-</section>
 </main></body>
 </html>
