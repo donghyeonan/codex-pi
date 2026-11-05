@@ -1,0 +1,145 @@
+<!doctype html>
+<!-- pi-canvas goodie: Stacked Chips. Original implementation. Inspired by Reacticx stacked-chips (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stacked Chips</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(90% 70% at 50% 30%,#141417 0%,#0a0a0b 75%);
+    display:grid;place-items:center;overflow:hidden;color:#ececef;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:min(360px,calc(100vw - 32px))}
+  .head{display:flex;align-items:center;gap:10px;height:30px;margin-bottom:14px}
+  .head .t{font-size:14px;font-weight:600;letter-spacing:-.01em;flex:1}
+  .stack{display:flex;align-items:center;height:22px}
+  .stack i{width:18px;height:18px;border-radius:50%;margin-left:-7px;box-shadow:0 0 0 2.5px #0f0f12;flex:none}
+  .stack i:first-child{margin-left:0}
+  .pill{display:flex;align-items:center;gap:6px;height:28px;padding:0 6px 0 8px;border-radius:999px;background:rgba(255,255,255,.05);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:opacity .3s,transform .4s cubic-bezier(.3,1.4,.5,1)}
+  .pill.zero{opacity:0;transform:scale(.85)}
+  .cnt{min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:#f4f4f6;color:#0b0b0d;
+    font-size:11.5px;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums;overflow:hidden}
+  .clr{border:0;background:none;color:#8a8994;font:inherit;font-size:12.5px;cursor:pointer;padding:4px 2px;border-radius:6px;outline:none;transition:color .2s,opacity .3s}
+  .clr:hover{color:#fff}.clr:focus-visible{box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+  .clr[disabled]{opacity:.35;cursor:default}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{--c:#888;position:relative;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px 0 11px;border:0;border-radius:999px;cursor:pointer;
+    font:inherit;font-size:13.5px;font-weight:500;color:#cfced6;outline:none;white-space:nowrap;
+    background:rgba(255,255,255,.045);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+    transition:background .3s,box-shadow .3s,color .3s;-webkit-tap-highlight-color:transparent}
+  .chip:hover{background:rgba(255,255,255,.07)}
+  .chip:focus-visible{box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 0 0 3px rgba(255,255,255,.22)}
+  .chip .d{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none;transition:transform .3s}
+  .chip .k{width:0;overflow:hidden;display:grid;place-items:center;margin-left:-7px;transition:width .35s cubic-bezier(.3,1.3,.5,1),margin .35s}
+  .chip .k svg{width:12px;height:12px;flex:none}
+  .chip .k path{stroke-dasharray:14;stroke-dashoffset:14;transition:stroke-dashoffset .3s .1s}
+  .chip[aria-pressed="true"]{color:#fff;background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 65%,transparent)}
+  .chip[aria-pressed="true"] .d{transform:scale(0);width:0;margin-right:-7px}
+  .chip[aria-pressed="true"] .k{width:12px;margin-left:0}
+  .chip[aria-pressed="true"] .k path{stroke-dashoffset:0}
+  .chip .n{font-size:11.5px;color:#6e6d77;font-variant-numeric:tabular-nums;transition:color .3s}
+  .chip[aria-pressed="true"] .n{color:color-mix(in srgb,var(--c) 60%,#fff)}
+  .foot{margin-top:16px;padding-top:12px;box-shadow:0 -1px 0 rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:12.5px;color:#76757f}
+  .foot b{color:#e4e3ea;font-weight:600;font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="t">Filter by team</div>
+    <div class="pill zero" id="pill"><div class="stack" id="stack"></div><div class="cnt" id="cnt">0</div></div>
+    <button class="clr" id="clr" type="button" disabled>Clear</button>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Teams"></div>
+  <div class="foot"><span>Showing <b id="shown">128</b> of 128 people</span><span id="lbl">All teams</span></div>
+</div>
+<script>
+(function(){
+  var TEAMS=[['Design','#f472b6',18],['Engineering','#60a5fa',46],['Product','#a78bfa',12],['Marketing','#fb923c',15],
+             ['Sales','#34d399',21],['Support','#facc15',9],['Research','#22d3ee',7]];
+  var chipsEl=document.getElementById('chips'),stack=document.getElementById('stack'),cnt=document.getElementById('cnt'),
+      pill=document.getElementById('pill'),clr=document.getElementById('clr'),shown=document.getElementById('shown'),lbl=document.getElementById('lbl');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sel=[],chips=[],auto=!reduce,timer,shownVal=128;
+  TEAMS.forEach(function(t,i){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.style.setProperty('--c',t[1]);b.setAttribute('aria-pressed','false');
+    b.innerHTML='<span class="d"></span><span class="k"><svg viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.2 4.7-4.8" stroke="'+t[1]+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'+t[0]+'<span class="n">'+t[2]+'</span>';
+    b.addEventListener('click',function(){stop();toggle(i)});
+    chipsEl.appendChild(b);chips.push(b);
+  });
+  // FLIP: measure → reorder → invert → play
+  function reflow(mutate){
+    var first=chips.map(function(c){return c.getBoundingClientRect()});
+    mutate();
+    var order=sel.concat(TEAMS.map(function(_,i){return i}).filter(function(i){return sel.indexOf(i)<0}));
+    order.forEach(function(i){chipsEl.appendChild(chips[i])});
+    if(reduce)return;
+    chips.forEach(function(c,i){
+      var last=c.getBoundingClientRect(),dx=first[i].left-last.left,dy=first[i].top-last.top,sw=first[i].width/last.width;
+      if(!dx&&!dy&&Math.abs(sw-1)<.01)return;
+      c.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],{duration:520,easing:'cubic-bezier(.3,1.25,.4,1)'});
+    });
+  }
+  function rollTo(el,from,to){
+    if(reduce||from===to){el.textContent=to;return}
+    var up=to>from;
+    el.animate([{transform:'none',opacity:1},{transform:'translateY('+(up?-8:8)+'px)',opacity:0}],{duration:120,easing:'ease-in'}).onfinish=function(){
+      el.textContent=to;
+      el.animate([{transform:'translateY('+(up?8:-8)+'px)',opacity:0},{transform:'none',opacity:1}],{duration:260,easing:'cubic-bezier(.3,1.5,.5,1)'});
+    };
+  }
+  function countUp(to){
+    var from=shownVal,t0=performance.now();shownVal=to;
+    if(reduce){shown.textContent=to;return}
+    (function f(now){var p=Math.min(1,(now-t0)/450),e=1-Math.pow(1-p,3);shown.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(f)})(t0);
+  }
+  function summary(prevCount){
+    // stacked dots: newest on top
+    var have=[];
+    [].slice.call(stack.children).forEach(function(el){
+      var i=+el.dataset.i;if(el.dataset.gone)return;
+      if(sel.indexOf(i)>=0){have.push(i);return}
+      el.dataset.gone=1;
+      if(reduce)el.remove();else el.animate([{transform:'none',opacity:1},{transform:'scale(0)',opacity:0}],{duration:200,easing:'ease-in',fill:'forwards'}).onfinish=function(){el.remove()};
+    });
+    sel.forEach(function(i){
+      if(have.indexOf(i)>=0)return;
+      var d=document.createElement('i');d.dataset.i=i;d.style.background='linear-gradient(135deg,'+TEAMS[i][1]+',color-mix(in srgb,'+TEAMS[i][1]+' 55%,#000))';
+      d.style.zIndex=10+sel.indexOf(i);stack.appendChild(d);
+      if(!reduce)d.animate([{transform:'translateY(-10px) scale(.3)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,1.6,.5,1)'});
+    });
+    rollTo(cnt,prevCount,sel.length);
+    pill.classList.toggle('zero',!sel.length);clr.disabled=!sel.length;
+    countUp(sel.length?sel.reduce(function(a,i){return a+TEAMS[i][2]},0):128);
+    lbl.textContent=!sel.length?'All teams':sel.length===1?TEAMS[sel[0]][0]+' only':sel.length+' teams';
+  }
+  function toggle(i){
+    var prev=sel.length;
+    reflow(function(){
+      var k=sel.indexOf(i);if(k>=0)sel.splice(k,1);else sel.push(i);
+      chips[i].setAttribute('aria-pressed',k<0);
+    });
+    if(!reduce&&sel.indexOf(i)>=0)chips[i].animate([{scale:1},{scale:1.08},{scale:1}],{duration:360,easing:'cubic-bezier(.3,1.5,.5,1)'});
+    summary(prev);
+  }
+  clr.addEventListener('click',function(){stop();clearAll()});
+  function clearAll(){var prev=sel.length;reflow(function(){sel.forEach(function(i){chips[i].setAttribute('aria-pressed','false')});sel=[]});summary(prev)}
+  function stop(){if(auto){auto=false;clearInterval(timer)}}
+  if(reduce){toggle(1);toggle(0)} // calm static state
+  var script=[1,0,6,4,1,5,'clear'],k=0;
+  if(auto){
+    setTimeout(function(){if(auto)toggle(1)},350);
+    setTimeout(function(){if(auto)toggle(0)},900);
+    k=2;
+    timer=setInterval(function(){var s=script[k++%script.length];if(s==='clear')clearAll();else toggle(s)},1500);
+  }
+})();
+</script>
+</body>
+</html>

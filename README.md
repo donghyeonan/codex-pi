@@ -1,6 +1,6 @@
 # codex-pi
 
-제공된 Codex CLI에 얹는 작은 스킬 묶음입니다. 기본 설치는 Markdown 스킬과 AGENTS.md 몇 줄이며, 선택적으로 로컬 분석 캔버스를 실행할 수 있습니다. Codex 설정·인증·모델·권한은 그대로입니다.
+제공된 Codex CLI에 얹는 작은 스킬 묶음입니다. 기본 설치는 Markdown 스킬과 AGENTS.md 몇 줄이며, 선택적으로 브라우저 캔버스(pi-canvas)를 MCP 서버 한 블록으로 추가합니다. Codex 인증·모델·권한은 그대로입니다.
 
 ## 설치
 
@@ -12,27 +12,33 @@ git clone --depth 1 https://github.com/donghyeonan/codex-pi /tmp/codex-pi && cp 
 
 그다음 평소처럼 `codex`를 실행합니다. 설정·옵션 변경은 없습니다. 업데이트 안내가 뜨면 **Skip**을 고릅니다.
 
-## 분석 캔버스 · 보고서
+## 캔버스 (pi-canvas)
 
-키트를 clone한 폴더에서 Node.js 22 이상으로 실행합니다. 별도 패키지 설치는 필요하지 않습니다.
+pen.dev 같은 브라우저 작업공간입니다. 보고서 화면, 자유롭게 이동·확대하는 디자인 캔버스, 그리고 **지금 Codex 터미널 세션과 같은 대화**인 채팅 패널이 있습니다. 웹에서 입력한 메시지는 터미널 Codex의 다음 메시지로 들어가고(작업 중이면 그 작업에 끼어듦), Codex의 답·도구 실행은 웹에 실시간으로 표시됩니다.
+
+한 번만 설치합니다(Node.js **22.18 이상**, 패키지 설치 불필요). 위 설치 명령 다음에:
 
 ```sh
-node canvas/server.mjs --workspace /absolute/path/to/project
+node /tmp/codex-pi/canvas/bin/codex-canvas.mjs install
 ```
 
-서버가 출력하는 `http://127.0.0.1:3000/#token=…` 주소를 엽니다. 캔버스에서는 산출물을 이동·크기 조절하고 메모하거나 표·차트 데이터를 선택해 대화에 보냅니다. **보고서** 탭에서는 같은 분석을 velog식 글로 읽고 독립 HTML로 저장합니다. HTML/JavaScript 산출물은 앱 권한과 분리된 sandbox에서 실행되며 외부 네트워크는 차단됩니다.
+`~/.codex/config.toml`에 `canvas` MCP 서버 한 블록(`# >>> pi-canvas` 표시 사이, 도구 자동 승인)만 추가합니다. 스킬은 위에서 복사한 `.agents/skills/`를 씁니다. 그다음 `codex`를 (다시) 실행합니다. clone한 위치(`/tmp/codex-pi`)는 지우지 않습니다.
 
-- 웹 채팅은 설치된 **Pi RPC / Codex app-server**를 지원합니다. 기본 `--agent auto`는 제공된 Codex 실행 맥락(`CODEX_THREAD_ID`) 또는 Codex만 있는 환경에서는 Codex, 그 외에는 로컬 Pi를 우선 선택합니다. `--agent pi|codex` 또는 입력창 아래 Agent 메뉴에서 고정할 수 있습니다. 인증·모델·권한 설정을 복사하거나 덮어쓰지 않습니다.
-- 자료·배치는 공통이고 대화는 엔진별로 보존합니다(`thread.json`: 기존 Codex, `thread-pi.json` 및 `pi-sessions/`: Pi). 실행 중 전환과 다른 터미널의 Pi 세션 파일 재사용은 거부합니다. **New**는 기존 대화를 보관하고 새 대화를 시작하며, 상단 대화 목록에서 같은 엔진의 이전 세션으로 돌아갑니다(`conversation-*.json`). Pi 질문은 대화 안에서 답하고, 보관된 질문은 입력창의 Agent 메뉴 또는 `/q`로 다시 엽니다.
-- CoFA처럼 제공된 Codex만 사용하는 환경은 `--agent codex`로 고정할 수도 있습니다. 실제 CoFA의 app-server 지원·포트 전달·시험 허용 여부는 현장 확인이 필요하며, 자동 감지를 플랫폼 검증으로 간주하지 않습니다.
-- 터미널 Codex에는 `canvas` 스킬로 분석을 요청합니다. `.canvas/artifacts/`에 쓴 파일이 화면에 자동 반영됩니다. 웹과 터미널은 **파일을 공유하고 대화는 별개**입니다.
-- 메모·배치는 `.canvas/`에 저장됩니다. 이 디렉터리에는 분석 내용과 대화 기록이 들어갈 수 있으므로 저장소에 포함할지는 프로젝트별로 정합니다.
-- 채팅 연결이 없어도 산출물 탐색과 메모는 사용할 수 있습니다. 포트 충돌 시 `--port 3001`처럼 명시합니다.
-- 채팅은 접힌 상태(하단 입력창)로 시작하고, 펼치면 왼쪽 패널이 됩니다. 패널의 `레퍼런스` 탭에서 함께 들어 있는 stageshow 예시 69개와 내 레퍼런스(`~/.codex-pi/refs/<분류>/<이름>.png`, 같은 이름 `.md` 메모 선택, `--refs <폴더>`로 변경)를 골라 다음 메시지의 기준으로 첨부합니다.
-- Codex 0.165.0 실제 모델로 산출물 생성, 서버 종료 후 동일 대화 재개, 터미널 산출물 자동 반영, 선택 행 전달을 확인했습니다. 브라우저에서 HTML 스크립트 실행·앱/네트워크 격리, 메모·배치 유지, 보고서 HTML 저장과 독립 렌더를 확인했습니다.
-- `node --test canvas/test/backend.test.mjs canvas/test/refs.test.mjs canvas/test/agents.test.mjs`: 모의 Pi/Codex 전환·재개·질문 응답, 접근 제어·중복 스트리밍·하위 폴더 경로 보호 검사 16개 통과. 로컬 Pi는 실제 RPC 접속과 모델 설정 읽기를 확인했으며, 이번 추가분의 실제 모델 응답·CoFA 실행은 미검증입니다.
+Codex에서:
 
-Pi에서는 전역 `canvas` 스킬을 등록한 뒤 `/reload`하여 `/skill:canvas`로 사용할 수 있습니다. 스킬만 복사했을 경우 앱을 실행할 원본 clone도 필요합니다.
+- `$canvas` → 작업공간이 **http://127.0.0.1:3000** 에 열립니다(첫 화면은 빈 캔버스). 포트가 사용 중이면 다음 빈 포트를 쓰고, 주소는 `node /tmp/codex-pi/canvas/bin/codex-canvas.mjs status`로 확인합니다.
+- "README랑 csv 보고 분석해서 캔버스에 시각화해줘": 원자료 보고서(`canvas_report`, 섹션마다 캔버스 프레임)부터 만들고, 좌표·노선은 지도형 SVG 프레임, 핵심 숫자는 편집 가능한 카드로 캔버스에 올립니다. CDN·지도 타일 없이 동작합니다.
+- "구성원이 배정 노선을 조회하는 웹앱 UI 잡아줘": `stageshow` 기준으로 모바일/데스크톱 프레임에 화면을 설계(`canvas_new`·`canvas_edit`)하고 스크린샷으로 확인한 뒤 구현합니다.
+- 캔버스에서 레이어를 선택하고 채팅하면 선택한 요소·메모가 함께 전달됩니다(`<canvas_context>`).
+
+참고:
+
+- 문서는 `~/.codex/pi-canvas/`에 저장됩니다(프로젝트 폴더를 건드리지 않음). `codex-canvas.mjs stop`으로 끄고, `uninstall`로 설정 블록을 지웁니다.
+- 실시간 대화 연결은 Codex TUI가 기본으로 쓰는 공유 app-server 데몬(`~/.codex/app-server-control/`)을 통합니다. 데몬 없이 실행된 세션이면 웹 채팅에 오프라인으로 표시되고, 보낸 메시지는 Codex가 다음에 캔버스 도구를 부를 때 전달됩니다.
+- 브라우저가 다른 기기에 있는 원격 환경이면 Codex를 `PI_CANVAS_HOST=0.0.0.0 codex`로 실행하고 해당 포트를 전달합니다. 주소의 `?t=` 토큰까지 함께 엽니다.
+- 직접 띄우려면 `node /tmp/codex-pi/canvas/server.mjs [--port 3000]`(포그라운드)로 실행합니다. 이때 웹 채팅은 가장 최근 Codex 세션에 붙습니다.
+- 검증: Codex CLI 0.166.0 TUI + 모의 모델 + 브라우저로 `$canvas`, 3000번 포트, 터미널↔웹 메시지·스트리밍·작업 중 끼어들기·중지, 캔버스 편집, 이 키트의 설치 방식(`.agents` 복사 + MCP만 설치)을 자동 검사(35개)로 확인했습니다. 실제 모델과 CoFA 현장(포트 전달·config 수정 허용 여부)은 미검증입니다.
+- `canvas/`는 pi-canvas(비공개 저장소)의 내보내기본입니다(`scripts/export-codex-pi.mjs`). 수정은 원본에서 합니다.
 
 ## 무엇이 들어 있나
 
@@ -48,7 +54,8 @@ Pi에서는 전역 `canvas` 스킬을 등록한 뒤 `/reload`하여 `/skill:canv
 | `grilling` | 계획을 질문 라운드로 다듬을 때 |
 | `humanize-korean` | "AI 티 없애줘", "번역투 고쳐": 내용·숫자·고유명사는 그대로 두고 한국어 문체만 다듬기, 검사 스크립트로 등급 확인 |
 | `html-report` | 이해가 안 되는 것·새 개념·자료를 번호를 붙여 한 줄씩 이어 가는 블로그식 독립 HTML로 설명 (기본 Anthropic, 요청 시 velog 스타일) |
-| `canvas` | 데이터 분석: 독립 HTML 원본 분석 보고서 먼저 → 가설·질문 → 필요 시 캔버스 시각화 |
+| `canvas` | `$canvas`: 데이터(README·CSV) 분석과 시각화, 보고서, 화면·웹앱 UI/UX를 브라우저 캔버스에서. 채팅은 터미널 세션과 같은 대화 |
+| `better-*`, `interface-review` | 캔버스 디자인 기준(레이아웃·타이포·색·UI·접근성·문구)과 완성 디자인 점검 |
 
 기록은 작업 폴더의 `problem-hub/`에 Markdown으로 남습니다(Node.js 22+, 추가 설치 없음). Pi의 Problem Hub와 같은 형식입니다.
 

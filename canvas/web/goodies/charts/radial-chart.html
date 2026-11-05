@@ -1,0 +1,145 @@
+<!doctype html>
+<!-- pi-canvas goodie: Activity Rings. Original implementation. Inspired by Reacticx radial-chart (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Activity Rings</title>
+<style>
+  :root { color-scheme: dark; --sans: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif;
+    --ink: #f5f5f7; --ink2: rgba(245,245,247,.62); --ink3: rgba(245,245,247,.38); }
+  html, body { margin: 0; height: 100%; background: #0a0a0b; overflow: hidden; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; display: grid; place-items: center; user-select: none; }
+  .card { width: min(100vw - 24px, 456px); height: min(100vh - 24px, 276px); box-sizing: border-box; padding: 16px 18px; border-radius: 20px;
+    background: linear-gradient(180deg, #161618, #111113); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 20px 50px -20px #000; display: flex; flex-direction: column; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; }
+  h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+  .date { font-size: 11.5px; color: var(--ink3); margin-top: 2px; }
+  .days { display: flex; gap: 2px; }
+  .day { display: grid; justify-items: center; gap: 2px; padding: 3px 3px 2px; border-radius: 8px; border: 0; background: none; color: var(--ink3); font: 600 9.5px var(--sans); cursor: pointer; transition: background .25s, color .25s; }
+  .day svg { width: 20px; height: 20px; }
+  .day[aria-pressed="true"] { background: rgba(255,255,255,.09); color: var(--ink); }
+  .day:hover { color: var(--ink2); }
+  .day:focus-visible, .row:focus-visible { outline: 2px solid rgba(255,255,255,.7); outline-offset: 1px; }
+  main { flex: 1; display: flex; align-items: center; gap: clamp(12px, 5vw, 28px); min-height: 0; }
+  #rings { height: min(100%, 176px); aspect-ratio: 1; flex: none; overflow: visible; }
+  #rings g { transition: opacity .3s; }
+  .legend { flex: 1; display: grid; gap: 4px; min-width: 0; }
+  .row { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 10px; transition: background .25s, opacity .3s; cursor: default; }
+  .row:hover { background: rgba(255,255,255,.05); }
+  .chip { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
+  .chip svg { width: 12px; height: 12px; }
+  .lbl { font-size: 11px; font-weight: 600; color: var(--ink2); letter-spacing: .02em; }
+  .val { font-size: 19px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .val small { font-size: 11px; font-weight: 600; color: var(--ink3); margin-left: 2px; letter-spacing: 0; }
+  .pct { font-size: 11px; font-weight: 600; color: var(--ink2); font-variant-numeric: tabular-nums; padding: 3px 7px; border-radius: 999px; background: rgba(255,255,255,.06); }
+  .dim .row:not(.hl) { opacity: .4; }
+  @media (max-width: 360px) { .days { display: none; } }
+  .val { white-space: nowrap; }
+  @media (max-width: 400px) { .pct { display: none; } }
+  @media (max-height: 250px) { .date { display: none; } .legend { gap: 0; } .row { padding: 3px 8px; } .val { font-size: 16px; } .card { padding: 12px 14px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <header><div><h1>Activity</h1><div class="date" id="date"></div></div><div class="days" id="days" role="group" aria-label="Day"></div></header>
+  <main>
+    <svg id="rings" viewBox="-100 -100 200 200" role="img" aria-label="Activity rings"></svg>
+    <div class="legend" id="legend"></div>
+  </main>
+</div>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const M = [
+    { k: 'Move', u: 'CAL', goal: 500, c: ['#ff1f5a', '#ff6f9c'], r: 80, icon: '<path d="M5 12h4l2-5 3 10 2-5h3" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { k: 'Exercise', u: 'MIN', goal: 30, c: ['#8be02a', '#d4ff5a'], r: 59, icon: '<path d="M7 12h10M5 9v6M19 9v6M3 11v2M21 11v2" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>' },
+    { k: 'Stand', u: 'HRS', goal: 12, c: ['#12d6e6', '#7af4ff'], r: 38, icon: '<path d="M12 5v14M7 10l5-5 5 5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' },
+  ];
+  const DAYS = [['M', 'Monday, Nov 2', [512, 34, 11]], ['T', 'Tuesday, Nov 3', [380, 22, 9]], ['W', 'Wednesday, Nov 4', [655, 48, 12]],
+    ['T', 'Thursday, Nov 5', [436, 31, 10]], ['F', 'Friday, Nov 6', [290, 15, 8]], ['S', 'Saturday, Nov 7', [720, 62, 12]], ['S', 'Sunday, Nov 8', [214, 12, 6]]];
+  const SW = 18, TAU = Math.PI * 2;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const svg = document.getElementById('rings'), legend = document.getElementById('legend');
+  const el = (n, a, p) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+  const defs = el('defs', {}, svg);
+  const sh = el('filter', { id: 'sh', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feDropShadow', { dx: 0, dy: 0, stdDeviation: 2.4, 'flood-color': '#000', 'flood-opacity': .7 }, sh);
+
+  const rings = M.map((m, i) => {
+    const g = el('g', {}, svg);
+    const lg = el('linearGradient', { id: 'g' + i, x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+    el('stop', { offset: 0, 'stop-color': m.c[0] }, lg); el('stop', { offset: 1, 'stop-color': m.c[1] }, lg);
+    const C = TAU * m.r, base = { r: m.r, fill: 'none', 'stroke-width': SW, 'stroke-linecap': 'round', transform: 'rotate(-90)' };
+    el('circle', { ...base, stroke: m.c[0], 'stroke-opacity': .17 }, g);
+    const a1 = el('circle', { ...base, stroke: `url(#g${i})`, 'stroke-dasharray': `0 ${C}` }, g);
+    const a2 = el('circle', { ...base, stroke: m.c[1], 'stroke-dasharray': `0 ${C}` }, g);
+    const cap = el('circle', { r: SW / 2, fill: m.c[1], filter: 'url(#sh)', opacity: 0 }, g);
+    const ic = el('g', { transform: `translate(-6 ${-m.r - 6}) scale(.5)` }, g); ic.innerHTML = M[i].icon;
+    return { g, a1, a2, cap, C, p: 0, from: 0, to: 0 };
+  });
+
+  const rows = M.map((m, i) => {
+    const r = document.createElement('div'); r.className = 'row'; r.tabIndex = 0;
+    r.innerHTML = `<span class="chip" style="background:linear-gradient(135deg,${m.c[0]},${m.c[1]})"><svg viewBox="0 0 24 24">${m.icon}</svg></span>
+      <div><div class="lbl">${m.k}</div><div class="val"><span>0</span><small>/${m.goal} ${m.u}</small></div></div><span class="pct">0%</span>`;
+    const hl = on => { legend.classList.toggle('dim', on); r.classList.toggle('hl', on); rings.forEach((rg, j) => rg.g.style.opacity = on && j !== i ? .3 : 1); };
+    r.onpointerenter = r.onfocus = () => hl(true); r.onpointerleave = r.onblur = () => hl(false);
+    rings[i].g.addEventListener('pointerenter', () => hl(true)); rings[i].g.addEventListener('pointerleave', () => hl(false));
+    legend.appendChild(r);
+    return { v: r.querySelector('.val span'), pct: r.querySelector('.pct') };
+  });
+
+  function draw() {
+    rings.forEach((rg, i) => {
+      const p = rg.p, C = rg.C;
+      rg.a1.setAttribute('stroke-dasharray', `${Math.min(p, 1) * C} ${C}`);
+      rg.a1.style.opacity = p < .005 ? 0 : 1;
+      rg.a2.setAttribute('stroke-dasharray', `${Math.max(0, p - 1) * C} ${C}`);
+      rg.a2.style.opacity = p > 1.005 ? 1 : 0;
+      const a = p * TAU - Math.PI / 2;
+      rg.cap.setAttribute('cx', Math.cos(a) * M[i].r); rg.cap.setAttribute('cy', Math.sin(a) * M[i].r);
+      rg.cap.setAttribute('opacity', p > .96 ? 1 : 0);
+      const v = p * M[i].goal;
+      rows[i].v.textContent = Math.round(v).toLocaleString('en-US');
+      rows[i].pct.textContent = Math.round(p * 100) + '%';
+    });
+  }
+
+  // header mini rings per day
+  const daysEl = document.getElementById('days');
+  const btns = DAYS.map(([l, , vals], d) => {
+    const b = document.createElement('button'); b.className = 'day'; b.setAttribute('aria-label', DAYS[d][1]);
+    b.innerHTML = `<svg viewBox="-12 -12 24 24">${M.map((m, i) => { const r = 10 - i * 3.4, C = TAU * r, p = Math.min(1, vals[i] / m.goal);
+      return `<circle r="${r}" fill="none" stroke="${m.c[0]}" stroke-opacity=".22" stroke-width="2.6"/><circle r="${r}" fill="none" stroke="${m.c[0]}" stroke-width="2.6" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="${p * C} ${C}"/>`; }).join('')}</svg>${l}`;
+    b.onclick = () => { stop(); select(d); };
+    daysEl.appendChild(b); return b;
+  });
+
+  let cur = -1, t0 = 0, raf = 0;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function select(d) {
+    if (d === cur) return; cur = d;
+    btns.forEach((b, i) => b.setAttribute('aria-pressed', i === d));
+    document.getElementById('date').textContent = DAYS[d][1];
+    rings.forEach((rg, i) => { rg.from = rg.p; rg.to = DAYS[d][2][i] / M[i].goal; });
+    if (reduce) { rings.forEach(rg => rg.p = rg.to); return draw(); }
+    t0 = performance.now(); cancelAnimationFrame(raf);
+    const step = now => {
+      const t = Math.max(0, Math.min(1, (now - t0) / 1100));
+      rings.forEach((rg, i) => { const k = ease(Math.max(0, Math.min(1, t * 1.15 - i * .07))); rg.p = rg.from + (rg.to - rg.from) * k; });
+      draw(); if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  let timer = 0;
+  function stop() { clearInterval(timer); timer = 0; }
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { stop(); select((cur + (e.key === 'ArrowRight' ? 1 : 6)) % 7); }
+  });
+  select(3);
+  if (!reduce) timer = setInterval(() => select((cur + 1) % 7), 2600);
+})();
+</script>
+</body>
+</html>

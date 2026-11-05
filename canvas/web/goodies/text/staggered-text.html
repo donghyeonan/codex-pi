@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- pi-canvas goodie: Staggered Text. Original implementation. Inspired by Reacticx staggered-text (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staggered Text</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(90% 70% at 50% 110%,#1a1530 0%,#0a0a0b 62%);color:#f4f4f6;overflow:hidden;
+    display:grid;place-items:center;font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .stage{width:100%;text-align:center;user-select:none;cursor:pointer;outline:none}
+  .label{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7c7c88;margin-bottom:12px}
+  .line{position:relative;height:1.25em;font-size:clamp(28px,8.4vw,52px);font-weight:700;letter-spacing:-.04em}
+  .phrase{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;white-space:nowrap}
+  .w{display:inline-flex;margin:0 .13em}
+  .c{display:inline-block;opacity:0;filter:blur(12px);transform:translateY(.45em) scale(.96);
+    transition:opacity .55s cubic-bezier(.2,.7,.2,1),filter .6s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  .in .c{opacity:1;filter:blur(0);transform:none}
+  .out .c{opacity:0;filter:blur(10px);transform:translateY(-.4em) scale(.98);
+    transition-duration:.35s,.4s,.45s;transition-timing-function:cubic-bezier(.4,0,1,1)}
+  .dots{display:flex;gap:6px;justify-content:center;margin-top:22px}
+  .dots i{width:6px;height:6px;border-radius:3px;background:#2e2e36;transition:width .4s cubic-bezier(.16,1,.3,1),background .4s}
+  .dots i.on{width:20px;background:#c4b5fd}
+  .hint{margin-top:12px;font-size:12px;color:#55555f}
+  @media (prefers-reduced-motion:reduce){.c{transition:opacity .2s!important;filter:none!important;transform:none!important}}
+</style></head>
+<body>
+<div class="stage" id="stage" tabindex="0" role="button" aria-live="polite" aria-label="Next phrase">
+  <div class="label">pi-canvas</div>
+  <div class="line" id="line"></div>
+  <div class="dots" id="dots"></div>
+  <div class="hint">Click or press → to advance</div>
+</div>
+<script>
+(() => {
+  const phrases = [
+    ['Think', 'in', '*frames.'],
+    ['Build', 'in', '*minutes.'],
+    ['Ship', 'with', '*confidence.']
+  ];
+  const line = document.getElementById('line'), dots = document.getElementById('dots'), stage = document.getElementById('stage');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  phrases.forEach(() => dots.appendChild(document.createElement('i')));
+  const STEP = 38; // ms between letters
+  const A = [196, 181, 253], B = [240, 171, 252], C = [253, 164, 175];
+  const mix = t => { const [p, q, u] = t < .5 ? [A, B, t * 2] : [B, C, t * 2 - 1]; return `rgb(${p.map((v, i) => Math.round(v + (q[i] - v) * u))})`; };
+
+  const build = words => {
+    const el = document.createElement('div'); el.className = 'phrase';
+    let k = 0;
+    words.forEach(w => {
+      const acc = w[0] === '*'; if (acc) w = w.slice(1);
+      const ws = document.createElement('span'); ws.className = 'w';
+      [...w].forEach((ch, j, a) => {
+        const c = document.createElement('span'); c.className = 'c'; c.textContent = ch;
+        c.style.transitionDelay = (k++ * STEP) + 'ms';
+        if (acc) c.style.color = mix(j / Math.max(1, a.length - 1));
+        ws.appendChild(c);
+      });
+      el.appendChild(ws);
+    });
+    el.dataset.n = k;
+    return el;
+  };
+
+  let idx = -1, cur = null, timer = null, auto = true;
+  const show = i => {
+    idx = (i + phrases.length) % phrases.length;
+    if (cur) {
+      const old = cur; old.classList.remove('in'); old.classList.add('out');
+      old.querySelectorAll('.c').forEach((c, j) => c.style.transitionDelay = (j * 18) + 'ms');
+      setTimeout(() => old.remove(), 900);
+    }
+    cur = build(phrases[idx]); line.appendChild(cur);
+    stage.setAttribute('aria-label', phrases[idx].join(' ').replace(/\*/g, ''));
+    cur.getBoundingClientRect();
+    requestAnimationFrame(() => cur.classList.add('in'));
+    [...dots.children].forEach((d, j) => d.classList.toggle('on', j === idx));
+  };
+  const schedule = () => { clearTimeout(timer); if (auto && !reduce) timer = setTimeout(() => { show(idx + 1); schedule(); }, 2900); };
+  const manual = dir => { auto = false; clearTimeout(timer); show(idx + dir); };
+  stage.addEventListener('click', () => manual(1));
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); manual(1); }
+    if (e.key === 'ArrowLeft') manual(-1);
+  });
+  show(0); schedule();
+})();
+</script>
+</body></html>

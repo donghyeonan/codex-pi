@@ -1,0 +1,126 @@
+<!doctype html>
+<!-- pi-canvas goodie: Like Burst Button. Original implementation. Inspired by Reacticx micro-interactions (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Like Burst Button</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(80% 70% at 50% 45%,#141215 0%,#0a0a0b 75%);
+    display:grid;place-items:center;overflow:hidden;color:#ededf0;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+  .btn{
+    position:relative;display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 22px 0 16px;border:0;border-radius:999px;
+    cursor:pointer;outline:none;color:#e7e6ea;font-family:inherit;font-size:17px;font-weight:600;letter-spacing:-.01em;
+    background:linear-gradient(180deg,#1d1c21,#151418);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.06),0 12px 30px -14px rgba(0,0,0,.9);
+    transition:box-shadow .4s,transform .35s cubic-bezier(.3,1.6,.5,1);-webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:scale(.95)}
+  .btn:focus-visible{box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 0 0 4px rgba(255,77,109,.3)}
+  .btn.on{box-shadow:inset 0 0 0 1px rgba(255,77,109,.35),inset 0 1px 0 rgba(255,255,255,.06),0 12px 34px -12px rgba(255,45,85,.45)}
+  .heart{position:relative;width:26px;height:26px;display:grid;place-items:center}
+  .heart svg{width:26px;height:26px;overflow:visible}
+  .heart .o{fill:none;stroke:#9a99a3;stroke-width:1.8;transition:stroke .2s}
+  .heart .f{fill:url(#hg);transform-origin:13px 14px;transform:scale(0)}
+  .btn.on .heart .o{stroke:transparent}
+  .btn.on .heart .f{transform:scale(1)}
+  .fx{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+  .ring{position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;box-sizing:border-box;opacity:0;border:solid #ff4d6d}
+  .dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;opacity:0}
+  .num{display:inline-flex;font-variant-numeric:tabular-nums;height:1.25em;line-height:1.25em;overflow:hidden;
+    -webkit-mask:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask:linear-gradient(transparent,#000 22%,#000 78%,transparent)}
+  .col{display:flex;flex-direction:column;transition:transform .7s cubic-bezier(.2,1.25,.35,1)}
+  .col span{height:1.25em;text-align:center}
+  .sep{width:.3em}
+  .btn.on .num{color:#ff6b86}
+  .cap{font-size:12.5px;color:#7b7a85;display:flex;align-items:center;gap:8px}
+  .av{display:flex}
+  .av i{width:18px;height:18px;border-radius:50%;margin-left:-6px;box-shadow:0 0 0 2px #0d0d0f}
+  .av i:first-child{margin-left:0}
+  .cap b{color:#c8c6d0;font-weight:500}
+  @media (prefers-reduced-motion:reduce){.col,.btn{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="btn" id="btn" type="button" aria-pressed="false" aria-label="Like">
+    <span class="heart">
+      <svg viewBox="0 0 26 26" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff6b8b"/><stop offset="1" stop-color="#ff2d55"/></linearGradient></defs>
+        <path class="o" d="M13 22s-8.5-5.1-8.5-11.2A4.6 4.6 0 0 1 13 8a4.6 4.6 0 0 1 8.5 2.8C21.5 16.9 13 22 13 22z" stroke-linejoin="round"/>
+        <path class="f" d="M13 22s-8.5-5.1-8.5-11.2A4.6 4.6 0 0 1 13 8a4.6 4.6 0 0 1 8.5 2.8C21.5 16.9 13 22 13 22z"/>
+      </svg>
+      <span class="fx" id="fx"></span>
+    </span>
+    <span class="num" id="num"></span>
+  </button>
+  <div class="cap">
+    <span class="av"><i style="background:linear-gradient(135deg,#fbbf24,#f97316)"></i><i style="background:linear-gradient(135deg,#60a5fa,#6366f1)"></i><i style="background:linear-gradient(135deg,#34d399,#0ea5e9)"></i></span>
+    <span>Liked by <b>Maya</b>, <b>Theo</b> and others</span>
+  </div>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('btn'),num=document.getElementById('num'),fx=document.getElementById('fx'),
+      fill=btn.querySelector('.f');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var base=1289,liked=false,auto=!reduce,timer;
+  var COLORS=['#ff4d6d','#ffb703','#8b5cf6','#22d3ee','#ff85a1','#34d399'];
+  function fmt(n){return n.toLocaleString('en-US')}
+  function render(n){
+    var s=fmt(n);
+    if(num.childElementCount!==s.length){
+      num.innerHTML='';
+      for(var i=0;i<s.length;i++){
+        var c=s[i],el=document.createElement('span');
+        if(c===','){el.className='sep';el.textContent=',';}
+        else{el.className='col';for(var d=0;d<10;d++){var x=document.createElement('span');x.textContent=d;el.appendChild(x)}}
+        num.appendChild(el);
+      }
+    }
+    for(var j=0;j<s.length;j++){
+      var col=num.children[j];
+      if(col.className==='col')col.style.transform='translateY('+(-1.25*+s[j])+'em)';
+    }
+  }
+  function burst(){
+    var ring=document.createElement('span');ring.className='ring';fx.appendChild(ring);
+    ring.animate([{transform:'scale(.2)',opacity:1,borderWidth:'18px'},{transform:'scale(1.25)',opacity:1,borderWidth:'2px',offset:.7},{transform:'scale(1.4)',opacity:0,borderWidth:'0px'}],
+      {duration:520,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=function(){ring.remove()};
+    for(var i=0;i<14;i++){
+      var d=document.createElement('span');d.className='dot';fx.appendChild(d);
+      var outer=i%2===0,a=(i/14)*Math.PI*2-Math.PI/2+(outer?0:.2),r=outer?42:31,s=outer?1:.75;
+      d.style.background=COLORS[i%COLORS.length];
+      var x=Math.cos(a)*r,y=Math.sin(a)*r;
+      d.animate([
+        {transform:'translate('+x*.4+'px,'+y*.4+'px) scale('+s+')',opacity:0,easing:'cubic-bezier(.2,.8,.3,1)'},
+        {transform:'translate('+x*.8+'px,'+y*.8+'px) scale('+s+')',opacity:1,offset:.2},
+        {transform:'translate('+x+'px,'+y+'px) scale('+s*.8+')',opacity:1,offset:.6},
+        {transform:'translate('+x*1.08+'px,'+y*1.08+'px) scale(0)',opacity:.6}
+      ],{duration:760,delay:110,fill:'backwards'}).onfinish=function(){this.effect.target.remove()};
+    }
+  }
+  function set(v){
+    liked=v;btn.classList.toggle('on',v);btn.setAttribute('aria-pressed',v);
+    render(base+(v?1:0));
+    if(reduce)return;
+    if(v){
+      fill.animate([{transform:'scale(0)'},{transform:'scale(0)',offset:.2},{transform:'scale(1.3)',offset:.55},{transform:'scale(.92)',offset:.78},{transform:'scale(1)'}],{duration:620,easing:'ease-out'});
+      burst();
+    }else{
+      fill.animate([{transform:'scale(1)'},{transform:'scale(0)'}],{duration:220,easing:'cubic-bezier(.5,0,.75,0)'});
+    }
+  }
+  render(base);
+  btn.addEventListener('click',function(){if(auto){auto=false;clearInterval(timer)}set(!liked)});
+  if(auto){setTimeout(function(){if(auto)set(true)},700);timer=setInterval(function(){set(!liked)},2400)}
+})();
+</script>
+</body>
+</html>

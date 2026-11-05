@@ -1,0 +1,16 @@
+{
+  "name": "codex-pi-canvas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pi extension (also for the Codex CLI): reports open in a browser workspace with a report view, a design canvas, and a chat that is the same live session as your terminal.",
+  "license": "MIT",
+  "bin": {
+    "codex-canvas": "bin/codex-canvas.mjs"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}

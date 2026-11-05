@@ -1,0 +1,149 @@
+<!doctype html>
+<!-- pi-canvas goodie: Photo Stack. Original implementation. Inspired by Reacticx photo-stack / polaroid (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photo Stack</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: grid; place-items: center; overflow: hidden; background: #0a0a0b;
+    background-image: radial-gradient(60% 55% at 50% 45%, #1b1a1f 0%, transparent 80%);
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  .stack { position: relative; width: 150px; height: 182px; outline: none; cursor: pointer; transform: scale(var(--s, 1)); }
+  .stack:focus-visible::after { content: ""; position: absolute; inset: -14px; border-radius: 16px; box-shadow: 0 0 0 2px #f5c66b; }
+  .pol {
+    position: absolute; inset: 0; background: #f7f5ef; border-radius: 3px; padding: 9px 9px 0; box-sizing: border-box;
+    box-shadow: 0 1px 1px rgba(0,0,0,.25), 0 14px 30px -8px rgba(0,0,0,.65);
+    transition: transform .65s cubic-bezier(.22, 1.4, .36, 1), box-shadow .4s;
+    will-change: transform;
+  }
+  .pol svg { display: block; width: 100%; aspect-ratio: 1; border-radius: 1px; }
+  .pol::before { /* gloss */
+    content: ""; position: absolute; left: 9px; right: 9px; top: 9px; aspect-ratio: 1; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 42%); mix-blend-mode: soft-light;
+  }
+  .pol::after { /* tape */
+    content: ""; position: absolute; top: -9px; left: 50%; width: 46px; height: 16px; margin-left: -23px; transform: rotate(-3deg);
+    background: rgba(240, 232, 210, .55); box-shadow: 0 1px 2px rgba(0,0,0,.15); backdrop-filter: blur(1px);
+  }
+  .cap {
+    display: block; text-align: center; padding-top: 9px; font: 14px/1 "Bradley Hand", "Segoe Print", "Marker Felt", "Comic Sans MS", cursive;
+    color: #3a3833; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fly { transition: transform .38s cubic-bezier(.4, 0, .7, .4) !important; }
+  .dots { position: fixed; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 6px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); transition: width .4s, background .4s; }
+  .dots i.on { width: 18px; background: #f5c66b; }
+</style>
+</head>
+<body>
+  <div class="stack" id="stack" tabindex="0" role="listbox" aria-label="Photo stack. Hover to fan out, click or press arrow keys to cycle">
+    <figure class="pol" style="margin:0"><svg viewBox="0 0 100 100"><defs><linearGradient id="a1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a62"/><stop offset=".55" stop-color="#ffcf8a"/><stop offset=".56" stop-color="#5c6fa8"/><stop offset="1" stop-color="#26305e"/></linearGradient></defs>
+      <rect width="100" height="100" fill="url(#a1)"/><circle cx="62" cy="50" r="11" fill="#fff1c4"/>
+      <path d="M0 56 L18 34 30 46 46 26 64 50 78 36 100 56Z" fill="#6b4a7a"/><path d="M0 56 L22 44 38 52 56 40 74 52 100 46 100 56Z" fill="#3f2f5e"/>
+      <g stroke="#ffe7b0" stroke-width="1.6" opacity=".7"><path d="M52 62h20M56 68h12M58 74h8"/></g></svg><figcaption class="cap">Tahoe, golden hour</figcaption></figure>
+    <figure class="pol" style="margin:0"><svg viewBox="0 0 100 100"><defs><linearGradient id="a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1030"/><stop offset="1" stop-color="#3b2a6b"/></linearGradient></defs>
+      <rect width="100" height="100" fill="url(#a2)"/><circle cx="78" cy="20" r="7" fill="#f4f0ff"/><circle cx="81" cy="18" r="6" fill="#141a40"/>
+      <g id="city"></g><rect y="92" width="100" height="8" fill="#0a0c1c"/></svg><figcaption class="cap">Shibuya, 1am</figcaption></figure>
+    <figure class="pol" style="margin:0"><svg viewBox="0 0 100 100"><defs><linearGradient id="a3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd3ff"/><stop offset=".5" stop-color="#d9f1ff"/><stop offset=".5" stop-color="#1f8fb8"/><stop offset="1" stop-color="#0c4f7a"/></linearGradient></defs>
+      <rect width="100" height="100" fill="url(#a3)"/><path d="M60 100 L58 62 66 44 76 40 88 48 100 44 V100Z" fill="#4c6b3c"/><path d="M60 100 L62 70 70 56 82 58 100 54 V100Z" fill="#2f4a2a"/>
+      <path d="M0 70 Q20 66 40 72 T80 76" stroke="#e8f8ff" stroke-width="1.4" fill="none" opacity=".7"/><path d="M8 84 Q26 80 46 86" stroke="#e8f8ff" stroke-width="1.2" fill="none" opacity=".5"/>
+      <path d="M22 22 q4 -3 8 0 q4 -3 8 0" stroke="#33536b" stroke-width="1.2" fill="none"/></svg><figcaption class="cap">Big Sur, hwy 1</figcaption></figure>
+    <figure class="pol" style="margin:0"><svg viewBox="0 0 100 100"><defs><linearGradient id="a4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a6e"/><stop offset=".6" stop-color="#e0729a"/><stop offset=".62" stop-color="#f3a07a"/><stop offset="1" stop-color="#c46a4a"/></linearGradient></defs>
+      <rect width="100" height="100" fill="url(#a4)"/><g fill="#fff"><circle cx="14" cy="12" r=".9"/><circle cx="40" cy="8" r=".7"/><circle cx="70" cy="16" r="1"/><circle cx="86" cy="6" r=".7"/><circle cx="26" cy="26" r=".6"/></g>
+      <path d="M0 70 Q30 58 60 66 T100 62 V100 H0Z" fill="#8a4436"/>
+      <path d="M30 100 V58 M30 70 q-8 0 -8 -10 M30 66 q9 0 9 -12 M39 54 q4 -2 0 -6" stroke="#2a1420" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg><figcaption class="cap">Joshua Tree</figcaption></figure>
+    <figure class="pol" style="margin:0"><svg viewBox="0 0 100 100"><defs><linearGradient id="a5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05121c"/><stop offset="1" stop-color="#0d2b3a"/></linearGradient><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7affc6" stop-opacity="0"/><stop offset=".7" stop-color="#5bffb0" stop-opacity=".85"/><stop offset="1" stop-color="#5bffb0" stop-opacity="0"/></linearGradient></defs>
+      <rect width="100" height="100" fill="url(#a5)"/><path d="M-5 50 C20 10 40 46 60 20 S95 30 105 8 L105 30 C90 46 70 30 58 48 S20 40 -5 70Z" fill="url(#g5)"/>
+      <path d="M0 78 Q30 68 60 76 T100 72 V100 H0Z" fill="#dfe9f0"/><g fill="#081820"><path d="M16 80 l5 -18 5 18Z"/><path d="M24 82 l4 -13 4 13Z"/><path d="M76 78 l5 -20 5 20Z"/><path d="M85 80 l3 -11 3 11Z"/></g></svg><figcaption class="cap">Abisko aurora</figcaption></figure>
+  </div>
+  <div class="dots" id="dots"></div>
+<script>
+(() => {
+  const stack = document.getElementById('stack');
+  const cards = [...stack.children];
+  const dots = document.getElementById('dots');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const N = cards.length;
+  let order = cards.map((_, i) => i);   // order[0] = top card
+  let fanned = false, busy = false, auto = !reduce, timer;
+
+  // procedural skyline with lit windows
+  (function city() {
+    let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    let x = 0, out = '';
+    while (x < 100) {
+      const w = 9 + r() * 10, h = 30 + r() * 46;
+      out += `<rect x="${x}" y="${92 - h}" width="${w - 1}" height="${h}" fill="#141634"/>`;
+      for (let wy = 92 - h + 4; wy < 88; wy += 5) for (let wx = x + 2; wx < x + w - 3; wx += 3.5)
+        if (r() > .55) out += `<rect x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="1.6" height="2" fill="${r() > .8 ? '#ff8fc7' : '#ffd36b'}"/>`;
+      x += w;
+    }
+    document.getElementById('city').innerHTML = out;
+  })();
+
+  const jitter = [[0, 0, -2], [6, -4, 5], [-7, 3, -7], [4, 5, 9], [-5, -3, -10]];
+  cards.forEach((_, i) => dots.appendChild(document.createElement('i')));
+
+  function layout() {
+    order.forEach((ci, pos) => {
+      const c = cards[ci];
+      c.style.zIndex = N - pos;
+      let tf;
+      if (fanned) {
+        const slot = [0, 1, -1, 2, -2][pos];
+        tf = `translate(${slot * 62}px, ${Math.abs(slot) * 10 - 6}px) rotate(${slot * 8}deg)`;
+      } else {
+        const [x, y, r] = jitter[pos];
+        tf = `translate(${x}px, ${y}px) rotate(${r}deg)`;
+      }
+      c.style.transform = tf;
+      c.setAttribute('aria-selected', pos === 0);
+    });
+    [...dots.children].forEach((d, i) => d.classList.toggle('on', i === order[0]));
+  }
+
+  function next() {
+    if (busy) return; busy = true;
+    const top = cards[order[0]];
+    top.classList.add('fly');
+    top.style.transform = `translate(${fanned ? 120 : 130}px, -20px) rotate(16deg)`;
+    setTimeout(() => {
+      top.classList.remove('fly');
+      order.push(order.shift());
+      layout();
+      setTimeout(() => (busy = false), 300);
+    }, 380);
+  }
+  function stopAuto() { auto = false; clearTimeout(timer); }
+  // demo script: shuffle, shuffle, fan out, shuffle while fanned, collapse
+  const script = [next, next, () => { fanned = true; layout(); }, next, () => { fanned = false; layout(); }];
+  let step = 0;
+  function tick() {
+    if (!auto) return;
+    script[step++ % script.length]();
+    timer = setTimeout(tick, 2000);
+  }
+
+  stack.addEventListener('pointerenter', () => { stopAuto(); fanned = true; layout(); });
+  stack.addEventListener('pointerleave', () => { fanned = false; layout(); });
+  stack.addEventListener('click', () => { stopAuto(); next(); });
+  stack.addEventListener('keydown', e => {
+    if (['ArrowRight', 'Enter', ' '].includes(e.key)) { e.preventDefault(); stopAuto(); next(); }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAuto(); fanned = !fanned; layout(); }
+  });
+  stack.addEventListener('focus', () => stopAuto());
+
+  function fit() { stack.style.setProperty('--s', Math.min(1, innerHeight / 320, innerWidth / 380).toFixed(3)); }
+  addEventListener('resize', fit); fit();
+
+  if (reduce) cards.forEach(c => (c.style.transition = 'none'));
+  layout();
+  if (auto) timer = setTimeout(tick, 1700);
+})();
+</script>
+</body>
+</html>

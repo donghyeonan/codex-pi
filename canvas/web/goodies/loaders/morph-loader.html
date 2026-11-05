@@ -1,0 +1,104 @@
+<!doctype html>
+<!-- pi-canvas goodie: Morph Loader. Original implementation. Inspired by Reacticx morph-loader (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Morph Loader</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:#0a0a0b;overflow:hidden;display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;outline:none;user-select:none}
+  svg{width:min(62vw,62vh,190px);height:auto;overflow:visible}
+  .lbl{font-size:13px;font-weight:500;color:#d9d9e0;letter-spacing:-.005em;height:18px;transition:opacity .25s}
+  .dots{display:flex;gap:6px}
+  .dots i{width:5px;height:5px;border-radius:3px;background:#2c2c34;transition:width .4s cubic-bezier(.16,1,.3,1),background .4s}
+  .dots i.on{width:16px;background:linear-gradient(90deg,#22d3ee,#a78bfa)}
+</style></head>
+<body>
+<div class="wrap" id="wrap" tabindex="0" role="status" aria-live="polite">
+  <svg viewBox="-100 -100 200 200" aria-hidden="true">
+    <defs>
+      <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="-70" y1="-70" x2="70" y2="70">
+        <stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#818cf8"/><stop offset="1" stop-color="#f472b6"/>
+      </linearGradient>
+      <radialGradient id="hl" cx="-.15" cy="-.35" r=".9">
+        <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
+    </defs>
+    <path id="glow" fill="url(#g)" opacity=".55" filter="url(#blur)"/>
+    <path id="shape" fill="url(#g)"/>
+    <path id="shine" fill="url(#hl)"/>
+    <path id="rim" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1"/>
+  </svg>
+  <div class="lbl" id="lbl">Analyzing</div>
+  <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
+</div>
+<script>
+(() => {
+  const N = 160, TAU = Math.PI * 2;
+  const smooth = (r, w, passes) => {        // circular moving average rounds the corners
+    for (let p = 0; p < passes; p++) {
+      const o = r.slice();
+      for (let i = 0; i < N; i++) { let s = 0; for (let k = -w; k <= w; k++) s += o[(i + k + N) % N]; r[i] = s / (2 * w + 1); }
+    }
+    return r;
+  };
+  const poly = (n, rot) => Array.from({ length: N }, (_, i) => {
+    const th = i / N * TAU - rot, seg = TAU / n, m = ((th % seg) + seg) % seg;
+    return Math.cos(Math.PI / n) / Math.cos(m - Math.PI / n);
+  });
+  const scale = (r, k) => r.map(v => v * k);
+  const shapes = [
+    { name: 'Analyzing', r: Array(N).fill(0.78) },
+    { name: 'Composing', r: scale(smooth(poly(4, Math.PI / 4), 3, 3), 0.98) },
+    { name: 'Rendering', r: scale(smooth(poly(3, -Math.PI / 2), 4, 3), 1.12) }
+  ];
+  const $ = id => document.getElementById(id);
+  const els = ['glow', 'shape', 'shine', 'rim'].map($), lbl = $('lbl'), dots = [...$('dots').children], grad = $('g');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const path = (r, rot, sc) => {
+    let d = '';
+    for (let i = 0; i < N; i++) {
+      const a = i / N * TAU + rot, v = r[i] * 72 * sc;
+      d += (i ? 'L' : 'M') + (Math.cos(a) * v).toFixed(2) + ' ' + (Math.sin(a) * v).toFixed(2);
+    }
+    return d + 'Z';
+  };
+  const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  let cur = 0, nxt = 1, phase = 'hold', pt = 0, rot = 0, auto = true, last = performance.now(), mix = new Array(N);
+  const setLabel = i => {
+    lbl.style.opacity = 0;
+    setTimeout(() => { lbl.textContent = shapes[i].name + '…'; lbl.style.opacity = 1; }, 160);
+    dots.forEach((d, j) => d.classList.toggle('on', j === i));
+  };
+  const render = (p, sc) => {
+    const a = shapes[cur].r, b = shapes[nxt].r;
+    for (let i = 0; i < N; i++) mix[i] = a[i] + (b[i] - a[i]) * p;
+    const d = path(mix, rot, sc);
+    els.forEach(e => e.setAttribute('d', d));
+    grad.setAttribute('gradientTransform', `rotate(${(rot * 57.3 * -0.6).toFixed(1)})`);
+  };
+  setLabel(0);
+  if (reduce) { render(0, 1); return; }
+  const go = () => { phase = 'morph'; pt = 0; setLabel(nxt); };
+  const frame = now => {
+    const dt = Math.min(50, now - last); last = now; pt += dt;
+    let p = 0, sc = 1;
+    if (phase === 'hold') { rot += dt * 0.0012; if (auto && pt > 650) go(); }
+    else {
+      const k = Math.min(1, pt / 950); p = ease(k);
+      rot += dt * 0.0012 + (ease(Math.min(1, (pt + dt) / 950)) - p) * TAU / 3;
+      sc = 1 - 0.08 * Math.sin(Math.PI * k);
+      if (k >= 1) { cur = nxt; nxt = (nxt + 1) % shapes.length; phase = 'hold'; pt = 0; p = 0; }
+    }
+    sc *= 1 + 0.025 * Math.sin(now / 260);
+    render(p, sc);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  const step = () => { auto = false; if (phase === 'hold') go(); };
+  $('wrap').addEventListener('click', step);
+  addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); step(); } });
+})();
+</script>
+</body></html>

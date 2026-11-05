@@ -1,0 +1,128 @@
+<!doctype html>
+<!-- pi-canvas goodie: Chroma Ring. Original implementation. Inspired by Reacticx chroma-ring (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chroma Ring</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #050507; overflow: hidden; }
+  body { position: relative; cursor: grab; touch-action: none; }
+  body:active { cursor: grabbing; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .fb { position: absolute; inset: 0; display: none; place-items: center; }
+  .fb i { width: min(56vh, 60vw); aspect-ratio: 1; border-radius: 50%; animation: spin 6s linear infinite;
+    background: conic-gradient(from 0deg, #ff4f9a, #ffb84f, #6bff9e, #4fd2ff, #9a6bff, #ff4f9a);
+    -webkit-mask: radial-gradient(closest-side, transparent 80%, #000 82%, #000 97%, transparent 99%);
+            mask: radial-gradient(closest-side, transparent 80%, #000 82%, #000 97%, transparent 99%);
+    filter: drop-shadow(0 0 18px rgba(160, 120, 255, .8)); }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  @media (prefers-reduced-motion: reduce) { .fb i { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="Spinning iridescent ring with bloom; drag to tilt"></canvas>
+<div class="fb" id="fb"><i></i></div>
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  const VS = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  const FS = `precision highp float;
+uniform vec2 R;uniform float T;uniform vec2 A;uniform float S;
+const float RR=.56,rr=.052;
+mat2 rot(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
+vec3 tf(vec3 p){p.yz=rot(A.x)*p.yz;p.xz=rot(A.y)*p.xz;return p;}
+float map(vec3 p){p=tf(p);vec2 q=vec2(length(p.xz)-RR,p.y);return length(q)-rr;}
+vec3 pal(float t){return .5+.5*cos(6.2832*(t+vec3(0.,.33,.67)));}
+void main(){
+ vec2 uv=(gl_FragCoord.xy-.5*R)/min(R.x,R.y);
+ vec3 ro=vec3(0.,0.,3.),rd=normalize(vec3(uv,-1.75));
+ float t=0.,d=1.,md=9.;
+ for(int i=0;i<72;i++){
+  vec3 p=ro+rd*t;d=map(p);
+  md=min(md,d);
+  if(d<.0006||t>5.)break;
+  t+=d*.9;
+ }
+ float ang=atan(uv.y,uv.x);
+ vec3 gc=pal(ang/6.2832+T*.08);
+ vec3 col=vec3(.012,.012,.02)+vec3(.04,.03,.07)*exp(-length(uv)*2.);
+ col+=gc*(.55*exp(-md*22.)+.22*exp(-md*6.))*(.8+.6*S);
+ if(d<.0006){
+  vec3 p=ro+rd*t;vec2 e=vec2(.0015,0.);
+  vec3 n=normalize(vec3(map(p+e.xyy)-map(p-e.xyy),map(p+e.yxy)-map(p-e.yxy),map(p+e.yyx)-map(p-e.yyx)));
+  vec3 lp=tf(p);
+  float phi=atan(lp.z,lp.x);
+  float fr=1.-abs(dot(n,-rd));
+  vec3 ir=mix(pal(phi/6.2832*2.+fr*1.3-T*.22),vec3(.9),.12);
+  vec3 L=normalize(vec3(-.4,.8,.6));
+  float dif=max(dot(n,L),0.);
+  float sp=pow(max(dot(reflect(rd,n),L),0.),36.);
+  float run=pow(.5+.5*cos(phi*2.+T*2.4),10.)+pow(.5+.5*cos(phi*3.-T*1.7+1.),14.)*.8;
+  col=vec3(.05,.05,.07)+ir*(.06+.35*dif+1.1*fr*fr)+sp*.8+ir*run*(1.8+S)+vec3(1.)*run*.35;
+ }
+ col=1.-exp(-col*1.25);
+ col+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5)-.5)/255.;
+ gl_FragColor=vec4(pow(col,vec3(.95)),1.);
+}`;
+  let gl = null; const U = {};
+  try { gl = cv.getContext('webgl', { antialias: false, alpha: false }); } catch (e) {}
+  if (gl) {
+    const mk = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+    const pr = gl.createProgram();
+    gl.attachShader(pr, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) gl = null;
+    else {
+      gl.useProgram(pr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      ['R', 'T', 'A', 'S'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+    }
+  }
+  if (!gl) { cv.style.display = 'none'; document.getElementById('fb').style.display = 'grid'; return; }
+
+  // tilt (x) and yaw (y) with spring-ish easing; drag adds spin velocity
+  const ang = { x: .55, y: 0, tx: .55, ty: 0 };
+  let user = false, drag = null, spin = 0, boost = 0, phase = 0, last = performance.now(), W = 0, H = 0;
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    W = Math.max(1, Math.round(cv.clientWidth * DPR)); H = Math.max(1, Math.round(cv.clientHeight * DPR));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; gl.viewport(0, 0, W, H); }
+    const tt = now / 1000;
+    if (!user) { ang.tx = .55 + Math.sin(tt * .45) * .2; ang.ty = Math.sin(tt * .3) * .55; }
+    if (!drag) { ang.ty += spin * dt; spin *= .96; }
+    ang.x += (ang.tx - ang.x) * .08; ang.y += (ang.ty - ang.y) * .08;
+    boost *= .95;
+    phase += dt * (1 + Math.abs(spin) * .4 + boost * 2);
+    gl.uniform2f(U.R, W, H); gl.uniform1f(U.T, phase + 4);
+    gl.uniform2f(U.A, ang.x, ang.y); gl.uniform1f(U.S, Math.min(1, boost + Math.abs(spin) * .15));
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  const redraw = () => reduce && frame(performance.now());
+  addEventListener('pointerdown', e => { user = true; drag = { x: e.clientX, y: e.clientY, ax: ang.tx, ay: ang.ty, t: performance.now() }; boost = 1; redraw(); });
+  addEventListener('pointermove', e => {
+    if (!drag) return;
+    const s = Math.min(innerWidth, innerHeight);
+    const ny = drag.ay + (e.clientX - drag.x) / s * 3;
+    spin = (ny - ang.ty) / Math.max(.016, (performance.now() - drag.t) / 1000) * .5; drag.t = performance.now();
+    ang.ty = ny; ang.tx = Math.max(.12, Math.min(1.57, drag.ax + (e.clientY - drag.y) / s * 2.5));
+    redraw();
+  });
+  const end = () => { drag = null; };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  addEventListener('keydown', e => {
+    const k = { ArrowLeft: [0, -.3], ArrowRight: [0, .3], ArrowUp: [-.15, 0], ArrowDown: [.15, 0] }[e.key];
+    if (k) { user = true; ang.tx = Math.max(.12, Math.min(1.57, ang.tx + k[0])); ang.ty += k[1]; boost = .6; redraw(); }
+    if (e.key === ' ') { user = true; spin += 6; boost = 1; }
+  });
+  addEventListener('resize', redraw);
+  if (reduce) frame(performance.now()); else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

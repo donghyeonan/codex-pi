@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- pi-canvas goodie: Circular Progress. Original implementation. Inspired by Reacticx circular-progress (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Circular Progress</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:#0a0a0b;color:#f4f4f6;overflow:hidden;display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:16px;user-select:none}
+  .ring{--s:min(58vmin,176px);--t:12px;position:relative;width:var(--s);height:var(--s);border-radius:50%;cursor:pointer;touch-action:none;outline:none}
+  .ring>div{position:absolute;inset:0;border-radius:50%}
+  .mask{-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--t) - .5px),#000 calc(100% - var(--t)));
+        mask:radial-gradient(farthest-side,transparent calc(100% - var(--t) - .5px),#000 calc(100% - var(--t)))}
+  .track{background:#18181d;box-shadow:inset 0 0 0 1px #ffffff08}
+  .glow{filter:blur(12px);opacity:.55}
+  .ring>.cap{position:absolute;inset:auto;left:50%;top:0;width:var(--t);height:50%;margin-left:calc(var(--t) / -2);transform-origin:50% 100%;border-radius:0;pointer-events:none}
+  .cap i{position:absolute;top:0;left:0;width:var(--t);height:var(--t);border-radius:50%}
+  .c0 i{background:#22d3ee}
+  .c1 i{background:#fff;box-shadow:0 0 0 3px #f472b6,0 0 14px 4px #f472b6aa,0 0 30px 8px #f472b655}
+  .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+  .pct{font-size:calc(var(--s) * .24);font-weight:650;letter-spacing:-.045em;font-variant-numeric:tabular-nums;line-height:1}
+  .pct small{font-size:.5em;color:#8b8b96;font-weight:500;margin-left:1px}
+  .sub{font-size:11px;color:#7b7b86;margin-top:6px;letter-spacing:.02em}
+  .chk{position:absolute;width:38%;opacity:0;transform:scale(.6);transition:opacity .3s,transform .5s cubic-bezier(.2,1.6,.4,1)}
+  .done .chk{opacity:1;transform:none}.done .pct,.done .sub{opacity:0}
+  .pct,.sub{transition:opacity .25s}
+  .meta{text-align:center}
+  .meta b{display:block;font-size:13px;font-weight:500;color:#e2e2e8}
+  .meta span{font-size:11.5px;color:#6b6b76;font-variant-numeric:tabular-nums}
+  .ring:focus-visible{box-shadow:0 0 0 2px #0a0a0b,0 0 0 4px #818cf8}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="ring" id="ring" tabindex="0" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Upload progress">
+    <div class="track mask"></div>
+    <div class="glow mask" id="glow"></div>
+    <div class="mask" id="arc"></div>
+    <div class="cap c0"><i></i></div>
+    <div class="cap c1" id="end"><i></i></div>
+    <div class="mid"><div class="pct" id="pct">0<small>%</small></div><div class="sub" id="sub">UPLOADING</div>
+      <svg class="chk" viewBox="0 0 24 24" fill="none" stroke="#f4f4f6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  </div>
+  <div class="meta"><b id="title">Uploading assets</b><span id="info">0 of 25 files · 0.0 MB/s</span></div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ring = $('ring'), arc = $('arc'), glow = $('glow'), end = $('end'), pct = $('pct'), info = $('info'), title = $('title');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let p = 0.1, shown = 0, auto = true, rate = 0.2, done = false, holdT = 0, last = performance.now(), t = 0;
+  const draw = v => {
+    const deg = v * 360;
+    const g = `conic-gradient(#22d3ee 0deg,#818cf8 ${deg * 0.55}deg,#f472b6 ${deg}deg,transparent ${deg}deg)`;
+    arc.style.background = g; glow.style.background = g;
+    end.style.transform = `rotate(${deg}deg)`;
+    end.style.opacity = v > 0.004 ? 1 : 0;
+    const n = Math.round(v * 100);
+    pct.firstChild.nodeValue = n;
+    ring.setAttribute('aria-valuenow', n);
+    info.textContent = done ? '25 files · 61.8 MB' : `${Math.round(v * 25)} of 25 files · ${(v > 0 ? 1.6 + rate * 9 : 0).toFixed(1)} MB/s`;
+  };
+  const finish = on => {
+    done = on; ring.classList.toggle('done', on);
+    title.textContent = on ? 'Upload complete' : 'Uploading assets';
+  };
+  if (reduce) { p = shown = 0.72; draw(shown); return; }
+
+  const frame = now => {
+    const dt = Math.min(50, now - last) / 1000; last = now; t += dt;
+    if (auto) {
+      if (!done) {
+        rate += ((0.12 + 0.24 * Math.abs(Math.sin(t * 0.9) * Math.cos(t * 2.3))) - rate) * dt * 2; // jittery network speed
+        p = Math.min(1, p + rate * dt);
+        if (shown > 0.999) { finish(true); holdT = 0; }
+      } else if ((holdT += dt) > 1.6) { finish(false); p = 0; shown = 0; }
+    }
+    shown += (p - shown) * Math.min(1, dt * (auto ? 8 : 14));
+    if (Math.abs(p - shown) < 0.0005) shown = p;
+    draw(shown);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+
+  const fromEvent = e => {
+    const r = ring.getBoundingClientRect();
+    let a = Math.atan2(e.clientX - r.left - r.width / 2, -(e.clientY - r.top - r.height / 2));
+    if (a < 0) a += Math.PI * 2;
+    let v = a / (Math.PI * 2);
+    if (shown > 0.85 && v < 0.15) v = 1; if (shown < 0.15 && v > 0.85) v = 0; // no wrap-around jumps
+    return v;
+  };
+  let drag = false;
+  const take = () => { auto = false; if (done) finish(false); };
+  ring.addEventListener('pointerdown', e => { take(); drag = true; ring.setPointerCapture(e.pointerId); p = fromEvent(e); });
+  ring.addEventListener('pointermove', e => { if (drag) { p = fromEvent(e); if (p >= 1) finish(true); } });
+  ring.addEventListener('pointerup', () => { drag = false; if (p >= 1) finish(true); });
+  ring.addEventListener('keydown', e => {
+    const d = { ArrowUp: .05, ArrowRight: .05, ArrowDown: -.05, ArrowLeft: -.05 }[e.key];
+    if (d) { e.preventDefault(); take(); p = Math.max(0, Math.min(1, p + d)); if (p >= 1) finish(true); }
+  });
+})();
+</script>
+</body></html>

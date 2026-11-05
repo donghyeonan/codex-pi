@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- pi-canvas goodie: Magnetic Button. Original implementation. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magnetic Button</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(70% 80% at 50% 50%,#141418 0%,#0a0a0b 75%);
+    display:grid;place-items:center;overflow:hidden;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .zone{position:relative;display:grid;place-items:center;width:100%;height:100%}
+  .ring{position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);margin:calc(var(--d)/-2);border-radius:50%;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);pointer-events:none}
+  .btn{
+    --d:clamp(96px,52vh,118px);
+    position:relative;width:var(--d);height:var(--d);border-radius:50%;border:0;padding:0;cursor:pointer;outline:none;overflow:hidden;
+    background:#f4f3ef;color:#0b0b0d;isolation:isolate;
+    box-shadow:0 20px 50px -18px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.4) inset,0 0 60px -20px rgba(160,140,255,.35);
+    font-family:inherit;-webkit-tap-highlight-color:transparent;will-change:transform;
+  }
+  .btn:focus-visible{box-shadow:0 0 0 4px rgba(124,108,255,.45),0 20px 50px -18px rgba(0,0,0,.9)}
+  .fill{position:absolute;left:50%;top:100%;width:170%;height:170%;margin-left:-85%;border-radius:50%;z-index:-1;
+    background:radial-gradient(circle at 50% 30%,#8b7dff,#5b4bf0 70%);
+    transform:translateY(var(--fy,0%));transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+  .btn.hot{color:#fff}
+  .btn.hot .fill{--fy:-80%}
+  .lbl{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:600;font-size:15px;letter-spacing:-.01em;
+    transition:color .35s;will-change:transform}
+  .lbl svg{width:20px;height:20px;transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+  .btn.hot .lbl svg{transform:translateX(4px)}
+  .cursor{position:absolute;left:0;top:0;width:18px;height:18px;pointer-events:none;opacity:0;transition:opacity .4s;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+  .cursor.on{opacity:1}
+  .hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:12px;color:#5f5e69;letter-spacing:.02em}
+  @media (prefers-reduced-motion:reduce){.fill,.lbl svg{transition:none}}
+</style>
+</head>
+<body>
+<div class="zone" id="zone">
+  <div class="ring" id="ring" style="--d:clamp(96px,52vh,118px)"></div>
+  <button class="btn" id="btn" type="button">
+    <span class="fill"></span>
+    <span class="lbl" id="lbl">Get started
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+  <svg class="cursor" id="cur" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2l11 6.2-4.9 1.1L7 14z" fill="#fff" stroke="#0b0b0d" stroke-width="1.2" stroke-linejoin="round"/></svg>
+  <div class="hint">Move your cursor near the button</div>
+</div>
+<script>
+(function(){
+  var zone=document.getElementById('zone'),btn=document.getElementById('btn'),lbl=document.getElementById('lbl'),
+      ring=document.getElementById('ring'),cur=document.getElementById('cur');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // simple damped springs: [pos, vel]
+  function S(k,c){return{x:0,y:0,vx:0,vy:0,k:k,c:c}}
+  var body=S(190,13),label=S(260,16),halo=S(70,10);
+  var px=null,py=null,auto=!reduce,t0=performance.now(),last=t0,RANGE=1.5;
+  function step(s,tx,ty,dt){
+    s.vx+=(s.k*(tx-s.x)-s.c*s.vx)*dt;s.vy+=(s.k*(ty-s.y)-s.c*s.vy)*dt;
+    s.x+=s.vx*dt;s.y+=s.vy*dt;
+  }
+  function frame(now){
+    var dt=Math.min(.032,(now-last)/1000);last=now;
+    var r=zone.getBoundingClientRect(),cx=r.width/2,cy=r.height/2,d=btn.offsetWidth;
+    if(auto){
+      // ghost cursor: lazy figure-eight that dips in and out of the magnetic field
+      var t=(now-t0)/1000;
+      px=cx+Math.sin(t*.9)*d*1.05;py=cy+Math.sin(t*1.8)*d*.38+Math.cos(t*.55)*d*.12;
+      cur.style.transform='translate('+(px-3)+'px,'+(py-2)+'px)';
+    }
+    var tx=0,ty=0,hot=false;
+    if(px!==null){
+      var dx=px-cx,dy=py-cy,dist=Math.hypot(dx,dy),R=d/2*RANGE+40;
+      if(dist<R){var f=1-Math.pow(dist/R,3);tx=dx*.42*f;ty=dy*.42*f;hot=dist<d/2+6}
+    }
+    btn.classList.toggle('hot',hot);
+    step(body,tx,ty,dt);step(label,tx*.45,ty*.45,dt);step(halo,tx*1.15,ty*1.15,dt);
+    var sp=Math.min(.08,Math.hypot(body.vx,body.vy)/5000);
+    btn.style.transform='translate('+body.x.toFixed(2)+'px,'+body.y.toFixed(2)+'px) scale('+(1+sp).toFixed(3)+')';
+    lbl.style.transform='translate('+label.x.toFixed(2)+'px,'+label.y.toFixed(2)+'px)';
+    ring.style.transform='translate('+halo.x.toFixed(2)+'px,'+halo.y.toFixed(2)+'px) scale('+(hot?1.22:1.12)+')';
+    requestAnimationFrame(frame);
+  }
+  function real(e){
+    if(e.pointerType==='mouse'&&!e.movementX&&!e.movementY)return;
+    if(auto){auto=false;cur.classList.remove('on')}
+    var r=zone.getBoundingClientRect();px=e.clientX-r.left;py=e.clientY-r.top;
+  }
+  zone.addEventListener('pointermove',real);
+  zone.addEventListener('pointerleave',function(){if(!auto)px=py=null});
+  btn.addEventListener('pointerdown',function(){
+    if(auto){auto=false;cur.classList.remove('on')}
+    if(!reduce)btn.animate([{scale:1},{scale:.9},{scale:1}],{duration:380,easing:'cubic-bezier(.3,1.5,.5,1)'});
+  });
+  if(!reduce){cur.classList.add('on');requestAnimationFrame(frame)}
+})();
+</script>
+</body>
+</html>

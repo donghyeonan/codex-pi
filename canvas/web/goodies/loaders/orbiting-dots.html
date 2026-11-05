@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- pi-canvas goodie: Orbiting Dots. Original implementation. Inspired by Reacticx orbiting-dots (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbiting Dots</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(70% 60% at 50% 45%,#121320 0%,#0a0a0b 70%);overflow:hidden;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab}
+  .cap{position:fixed;left:0;right:0;bottom:7%;text-align:center;pointer-events:none}
+  .cap b{display:block;font-size:13px;font-weight:500;color:#d6d6de;letter-spacing:-.005em}
+  .cap span{font-size:11.5px;color:#6a6a76}
+</style></head>
+<body>
+<canvas id="c" role="img" aria-label="Loading"></canvas>
+<div class="cap"><b>Syncing workspace</b><span id="sub">Connecting to 3 regions</span></div>
+<script>
+(() => {
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rings = [
+    { c: [103, 232, 249], tilt: 1.22, yaw: 0, sp: 1.25, n: 3 },
+    { c: [167, 139, 250], tilt: 1.22, yaw: 2.094, sp: -0.95, n: 3 },
+    { c: [244, 114, 182], tilt: 1.22, yaw: 4.189, sp: 1.6, n: 2 }
+  ];
+  const sprites = rings.map(r => {               // pre-rendered glow per colour
+    const s = document.createElement('canvas'); s.width = s.height = 64;
+    const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, '#fff'); gr.addColorStop(0.16, `rgba(${r.c},1)`); gr.addColorStop(0.4, `rgba(${r.c},.35)`); gr.addColorStop(1, `rgba(${r.c},0)`);
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return s;
+  });
+  let W, H, dpr, cx, cy, R;
+  const resize = () => {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    W = cv.width = innerWidth * dpr | 0; H = cv.height = innerHeight * dpr | 0;
+    cx = W / 2; cy = H * 0.43; R = Math.min(W, H) * 0.3;
+  };
+  resize(); addEventListener('resize', resize);
+
+  let gx = -0.25, gy = 0, tgx = -0.25, tgy = 0, auto = true, t = 0, last = performance.now();
+  cv.addEventListener('pointermove', e => { if (!e.movementX && !e.movementY) return; 
+    auto = false;
+    tgx = -((e.clientY / innerHeight) - 0.43) * 1.6; tgy = ((e.clientX / innerWidth) - 0.5) * 1.8;
+  });
+  cv.addEventListener('pointerleave', () => { auto = true; });
+  // rotate a point on ring circle into view space
+  const P = (ring, a) => {
+    let x = Math.cos(a), y = Math.sin(a), z = 0;
+    let y1 = y * Math.cos(ring.tilt), z1 = y * Math.sin(ring.tilt); y = y1; z = z1;   // tilt
+    let x1 = x * Math.cos(ring.yaw) - y * Math.sin(ring.yaw); y1 = x * Math.sin(ring.yaw) + y * Math.cos(ring.yaw); x = x1; y = y1;
+    x1 = x * Math.cos(gy) + z * Math.sin(gy); z1 = -x * Math.sin(gy) + z * Math.cos(gy); x = x1; z = z1;
+    y1 = y * Math.cos(gx) - z * Math.sin(gx); z1 = y * Math.sin(gx) + z * Math.cos(gx); y = y1; z = z1;
+    const s = 3.2 / (3.2 + z);
+    return { x: cx + x * R * s, y: cy + y * R * s, z, s };
+  };
+  const drawRing = (ring, front) => {
+    ctx.lineWidth = 1 * dpr;
+    let prev = P(ring, 0);
+    for (let i = 1; i <= 90; i++) {
+      const p = P(ring, i / 90 * Math.PI * 2);
+      if ((p.z < 0) === front) {
+        ctx.strokeStyle = `rgba(${ring.c},${front ? 0.22 : 0.07})`;
+        ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+      prev = p;
+    }
+  };
+  const dots = (front) => {
+    rings.forEach((ring, ri) => {
+      for (let d = 0; d < ring.n; d++) {
+        const a0 = t * ring.sp + d * Math.PI * 2 / ring.n + ri;
+        for (let k = 14; k >= 0; k--) {          // comet tail then head
+          const p = P(ring, a0 - Math.sign(ring.sp) * k * 0.055);
+          if ((p.z < 0) !== front) continue;
+          const f = 1 - k / 15, depth = 0.55 + 0.45 * (1 - (p.z + 1) / 2);
+          const size = (k ? 13 * f : 30) * p.s * dpr;
+          ctx.globalAlpha = (k ? 0.55 * f * f : 1) * depth;
+          ctx.drawImage(sprites[ri], p.x - size / 2, p.y - size / 2, size, size);
+        }
+      }
+    });
+    ctx.globalAlpha = 1;
+  };
+  const core = () => {
+    const pulse = 1 + 0.12 * Math.sin(t * 3.2);
+    const r = R * 0.2 * pulse;
+    let g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3.2);
+    g.addColorStop(0, 'rgba(167,139,250,.35)'); g.addColorStop(1, 'rgba(167,139,250,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * 3.2, 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, '#c7d2fe'); g.addColorStop(0.8, '#7c3aed'); g.addColorStop(1, '#3b0764');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+  };
+  const frame = now => {
+    const dt = Math.min(50, now - last) / 1000; last = now; t += dt;
+    if (auto) { tgy = Math.sin(t * 0.35) * 0.5; tgx = -0.25 + Math.sin(t * 0.27) * 0.18; }
+    gx += (tgx - gx) * Math.min(1, dt * 3); gy += (tgy - gy) * Math.min(1, dt * 3);
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+    rings.forEach(r => drawRing(r, false)); dots(false);
+    core();
+    rings.forEach(r => drawRing(r, true)); dots(true);
+    if (!reduce) requestAnimationFrame(frame);
+  };
+  if (reduce) t = 0.9;
+  requestAnimationFrame(frame);
+  const sub = document.getElementById('sub'), msgs = ['Connecting to 3 regions', 'Merging 128 changes', 'Almost there'];
+  let m = 0; if (!reduce) setInterval(() => { sub.textContent = msgs[m = (m + 1) % msgs.length]; }, 2400);
+})();
+</script>
+</body></html>

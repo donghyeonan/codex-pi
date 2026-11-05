@@ -1,32 +1,36 @@
 ---
 name: canvas
-description: Use when analyzing a dataset or document collection, or when the user wants the local canvas/report. Raw analysis report first, then hypotheses and questions; visual design on the canvas.
+description: Use when the user types $canvas, wants data (CSV/JSON, a task README) analyzed and visualized, wants a report, or wants a screen or web-app UI/UX designed. Everything is shown in the pi-canvas browser workspace (http://127.0.0.1:3000) whose chat panel is this same Codex session.
 ---
 
-# Data analysis → report → canvas
+# canvas
 
-## Order
+pi-canvas is a pen.dev-style browser workspace (Report view, free design canvas, and a chat panel that IS this Codex session) driven by the `canvas` MCP tools: `canvas_open`, `canvas_report`, `canvas_new`, `canvas_edit`, `canvas_read`, `canvas_screenshot`. If those tools are missing, tell the user to run `node <kit>/canvas/bin/codex-canvas.mjs install` (or `bin/codex-canvas.mjs install` in a pi-canvas clone) and restart Codex.
 
-1. **Raw analysis, no conclusion yet.** Read everything given. Report what the data is: sources, units, fields, counts, distributions, missing/odd values, what stands out. Bar/donut/histogram charts of actual values. If a goal or README exists, note it but do not filter the raw picture through it.
-2. **Report first.** A standalone HTML file, not a canvas artifact: `<workspace>/report/index.html`, opened directly in the browser. Raw tables (CSV/JSONL) get a linked viewer `report/tables.html`: search, filter, sort.
-3. **Then branch:**
-   - Goal given → hypotheses the raw picture allows for that goal, then `grilling` questions to align intent.
-   - No goal → stop after the report. The user reads and decides a direction; then propose several hypotheses for it.
-4. **Canvas only when visuals/design are needed** beyond the report: diagrams, maps, UI mockups (`stageshow`). Never put the report or its pieces on the canvas.
+## $canvas alone
 
-Never fabricate data, sources or checks. Every number traces to a file/row.
+Call `canvas_open` and reply with the URL in one line. Mention that the chat there is this session. If no browser opened (remote machine), the user opens that URL; the port must be forwarded (`PI_CANVAS_HOST=0.0.0.0` when started from a container).
 
-## Report
+## Data → understanding → visuals (CSV, coordinates, schedules …)
 
-Follow the `html-report` skill (numbered blog-style flow, default Anthropic style). The numbers state what is in the data, each chart, quoted passage or row link sits right after the number that uses it, and `한줄 코멘트.` blocks carry what it means and how sure we are.
+1. **Read everything first.** The README/task statement and every data file: fields, units, row counts, keys that join files, missing/odd values. Use quick shell/Node/Python checks. Never invent data; every number must trace to a file and row.
+2. **Raw picture as a report.** One `canvas_report`: a `<section>` per part (dataset overview, each file, distributions, what stands out, the task's goal and constraints). Inline SVG charts of actual values, no conclusions yet. Each section becomes a frame on the canvas.
+3. **Visuals on the canvas.** `canvas_new` (or add frames next to the report frames) and build one frame per question:
+   - Coordinates/maps: a frame whose `html` is a self-contained SVG/JS view: scale x/y or lat/lng to the frame, points coloured by group, routes as polylines with order arrows, stop labels, legend, hover tooltips. Embed the data in the page. **No CDN, no map tiles** (the network may be blocked).
+   - Big data: write the page to a file (e.g. `.canvas/route-map.html`) and add the frame with `node.htmlPath` instead of inline `html`.
+   - KPI cards and short tables as native layers (frame + text/rect, flex `layout`) so the user can move and edit them; charts as inline SVG.
+   - Name frames by what they answer; put assumptions in the layer `context`.
+   - `canvas_screenshot` every new frame and fix what looks wrong before saying done.
+4. **Goal given:** state the hypotheses and the plan the data supports (e.g. route assignment rules), ask the open questions, then show the result as frames (before/after, per-route maps, load per route).
 
-## Canvas files
+## Web app UI/UX
 
-Workspace = the analysis project. Write only `<workspace>/.canvas/artifacts/<id>.json` (temp file then rename); never edit `board.json`, `notes.json`, `thread*.json`. Keep stable ids; order with filename prefixes.
+Design on the canvas before coding. If the `stageshow` skill is available, follow it for the UI/UX taste. Then:
 
-Required `id`, `title`, `type`; optional `facts`, `interpretation`, `sources` (`{label,url}`).
-- `html`: `content` or local `src`
-- `table`: `columns`, `rows`; `chart`: same + `chart: {kind: bar|line, x, y}`
-- `markdown`: `content`; `image`: local `src`
+1. `canvas_new` with device frames (e.g. mobile 390x844 for "look up my assigned route", desktop for an admin view), one frame per screen/state (empty, loading, result, error).
+2. Build with native layers through `canvas_edit` (frames with flex `layout`, text, rect, icon, image; `isComponent` for repeated cards; `set_variables` for colours). Use real data from the files for sample content.
+3. `canvas_screenshot` and refine. When the user approves, implement the app in code to match the frames (the frames' Code panel gives HTML/Tailwind as a starting point).
 
-Run from the codex-pi clone (three directories above this skill's real path): `node canvas/server.mjs --workspace <abs path>`, open the printed URL. Check an open port's workspace before reusing it.
+## Messages from the browser
+
+A user message ending with `<canvas_context doc=… view=…>` was typed in the canvas. Call `canvas_read` for that document first, then change it with `canvas_edit` (`replace_in_report` for small report edits, `set_report` for rewrites, `add`/`update`/`delete` for layers). Respect the selected layers' context notes, and treat unresolved canvas comments as the user's feedback. Do not edit the stored document files with shell or patch tools.

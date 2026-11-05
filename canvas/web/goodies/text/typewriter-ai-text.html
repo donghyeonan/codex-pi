@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- pi-canvas goodie: Typewriter AI Text. Original implementation. Inspired by Reacticx dia-text (MIT) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typewriter AI Text</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{background:#0a0a0b;color:#e7e7ec;overflow:hidden;display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"SF Pro Display","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  .chat{width:min(520px,calc(100vw - 32px));height:min(268px,calc(100vh - 28px));display:flex;flex-direction:column;gap:14px;cursor:pointer;outline:none}
+  .q{align-self:flex-end;max-width:82%;background:#1c1c21;border:1px solid #26262d;color:#d8d8df;font-size:14px;line-height:1.45;
+    padding:9px 13px;border-radius:16px 16px 4px 16px;transition:opacity .4s,transform .5s cubic-bezier(.16,1,.3,1)}
+  .q.hide{opacity:0;transform:translateY(8px)}
+  .who{display:flex;align-items:center;gap:8px;font-size:13px;color:#a1a1ab;font-weight:500}
+  .orb{width:20px;height:20px;border-radius:50%;background:conic-gradient(from 0deg,#38bdf8,#a78bfa,#f472b6,#fbbf24,#38bdf8);
+    box-shadow:0 0 14px #a78bfa66;animation:spin 3s linear infinite;position:relative}
+  .orb::after{content:"";position:absolute;inset:5px;border-radius:50%;background:#0a0a0b}
+  .status{background:linear-gradient(90deg,#5b5b66 30%,#e4e4ea 50%,#5b5b66 70%);background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 1.4s linear infinite;font-weight:400}
+  .status.done{animation:none;background:none;color:#5b5b66}
+  .a{font-size:15px;line-height:1.6;color:#e7e7ec;letter-spacing:-.005em;min-height:3em}
+  .t{opacity:0;filter:blur(5px);color:#c4b5fd;transition:opacity .35s ease-out,filter .35s ease-out,color 1.1s ease-out}
+  .t.on{opacity:1;filter:none;color:inherit}
+  b.t.on{color:#fff}
+  .caret{display:inline-block;width:9px;height:1.05em;vertical-align:-.17em;margin-left:3px;border-radius:5px;
+    background:linear-gradient(180deg,#38bdf8,#a78bfa 50%,#f472b6);background-size:100% 200%;animation:cg 1.2s ease-in-out infinite alternate;
+    box-shadow:0 0 12px #a78bfaaa,0 0 2px #fff8 inset;transition:opacity .3s}
+  .caret.idle{animation:cg 1.2s ease-in-out infinite alternate,blink 1s steps(2) infinite}
+  .acts{display:flex;gap:6px;opacity:0;transform:translateY(4px);transition:opacity .4s,transform .4s}
+  .acts.on{opacity:1;transform:none}
+  .acts span{font-size:12px;color:#8a8a95;border:1px solid #24242a;border-radius:8px;padding:4px 9px;background:#121215}
+  @keyframes spin{to{transform:rotate(1turn)}}
+  @keyframes sh{from{background-position:120% 0}to{background-position:-120% 0}}
+  @keyframes cg{to{background-position:0 100%}}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.orb,.status,.caret{animation:none!important}.t{transition:none}}
+</style></head>
+<body>
+<div class="chat" id="chat" tabindex="0" role="log" aria-live="polite">
+  <div class="q" id="q"></div>
+  <div class="who"><span class="orb"></span>Assistant <span class="status" id="st">Thinking…</span></div>
+  <div class="a" id="a"></div>
+  <div class="acts" id="acts"><span>Copy</span><span>Regenerate</span><span aria-label="Good response"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M7 10v11H3V10zM7 10l4-8a3 3 0 0 1 3 3v4h6a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.6 21H7"/></svg></span></div>
+</div>
+<script>
+(() => {
+  const convo = [
+    ['How can I make my landing page feel faster?',
+     'Start by **cutting what blocks the first paint.** Inline the critical CSS, defer non-essential scripts, and ship images as AVIF with explicit sizes so nothing shifts. Then prefetch the next route on hover — it will feel instant before it actually is.'],
+    ['Summarize this week’s design review.',
+     'Three themes stood out: **navigation is too deep on mobile,** empty states need clearer next steps, and the new chart palette tested well with every group. Suggested next step: prototype a two-level nav and review it Thursday.'],
+    ['Write a one-line tagline for pi-canvas.',
+     '**Design at the speed of thought** — a canvas where every frame is real, responsive and ready to ship.']
+  ];
+  const $ = id => document.getElementById(id);
+  const q = $('q'), a = $('a'), st = $('st'), acts = $('acts'), chat = $('chat');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const caret = document.createElement('span'); caret.className = 'caret';
+  let i = 0, tokens = [], k = 0, timer, auto = true, state = 'idle';
+
+  const tokenize = s => {
+    const out = []; let bold = false;
+    s.split(/(\*\*)/).forEach(part => {
+      if (part === '**') { bold = !bold; return; }
+      (part.match(/\S+\s*|\s+/g) || []).forEach(w => out.push([w, bold]));
+    });
+    return out;
+  };
+  const start = n => {
+    clearTimeout(timer); i = (n + convo.length) % convo.length;
+    q.classList.add('hide'); acts.classList.remove('on');
+    a.textContent = ''; caret.classList.add('idle'); a.appendChild(caret);
+    st.textContent = 'Thinking…'; st.classList.remove('done');
+    setTimeout(() => { q.textContent = convo[i][0]; q.classList.remove('hide'); }, 60);
+    tokens = tokenize(convo[i][1]).map(([w, b]) => { const e = document.createElement(b ? 'b' : 'span'); e.className = 't'; e.textContent = w; return e; });
+    k = 0; state = 'think';
+    if (reduce) return finish();
+    timer = setTimeout(() => { st.textContent = 'Writing'; caret.classList.remove('idle'); state = 'stream'; stream(); }, 700);
+  };
+  const stream = () => {
+    const n = 1 + (Math.random() * 2 | 0);
+    for (let j = 0; j < n && k < tokens.length; j++) {
+      const t = tokens[k++]; a.insertBefore(t, caret);
+      requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('on')));
+    }
+    if (k < tokens.length) timer = setTimeout(stream, 55 + Math.random() * 85);
+    else done();
+  };
+  const finish = () => {
+    clearTimeout(timer);
+    while (k < tokens.length) { const t = tokens[k++]; a.insertBefore(t, caret); t.classList.add('on'); }
+    done();
+  };
+  const done = () => {
+    state = 'done'; caret.classList.add('idle');
+    st.textContent = 'Answered in 1.2s'; st.classList.add('done');
+    acts.classList.add('on');
+    if (auto && !reduce) timer = setTimeout(() => start(i + 1), 3200);
+  };
+  const act = () => { auto = false; if (state === 'done') start(i + 1); else finish(); };
+  chat.addEventListener('click', act);
+  addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  start(0);
+})();
+</script>
+</body></html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<!-- pi-canvas goodie: Profile Card. Original implementation. Inspired by Reacticx profile-card / verified-badge (MIT) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile Card</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center; overflow: hidden; background: #0a0a0b;
+    font-family: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased; color: #f4f4f6;
+  }
+  .card {
+    position: relative; width: 300px; flex: none; border-radius: 24px; overflow: hidden; background: #131316;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), 0 30px 60px -20px rgba(0,0,0,.8);
+    transform: scale(var(--s, 1));
+  }
+  .cover {
+    height: 92px; position: relative;
+    background: radial-gradient(60% 120% at 15% 0%, #ff7eb3 0%, transparent 60%), radial-gradient(60% 120% at 85% 10%, #7a6bff 0%, transparent 60%),
+      radial-gradient(80% 120% at 50% 120%, #20d3c2 0%, transparent 60%), #2a1f4a;
+  }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 40%, #131316); }
+  .body { padding: 0 20px 20px; margin-top: -42px; position: relative; }
+  .top { display: flex; align-items: flex-end; justify-content: space-between; }
+  .ring { width: 80px; height: 80px; border-radius: 50%; padding: 3px; box-sizing: border-box; position: relative; }
+  .ring::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from var(--a, 0deg), #ff7eb3, #ffcf6b, #20d3c2, #7a6bff, #ff7eb3);
+  }
+  .av {
+    position: relative; width: 100%; height: 100%; border-radius: 50%; border: 3px solid #131316; box-sizing: border-box;
+    display: grid; place-items: center; font-size: 25px; font-weight: 750; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 10px rgba(60, 0, 80, .35);
+    background: radial-gradient(70% 70% at 25% 20%, #ffd08a, transparent 60%), radial-gradient(80% 80% at 90% 90%, #6b5cff, transparent 65%), linear-gradient(140deg, #ff8a7a, #ff5fa2);
+  }
+  .av::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(170deg, rgba(255,255,255,.35), transparent 45%); }
+  .dot { position: absolute; right: 4px; bottom: 6px; width: 13px; height: 13px; border-radius: 50%; background: #34d77b; border: 3px solid #131316; }
+  .actions { display: flex; gap: 8px; padding-bottom: 4px; }
+  .icon {
+    width: 36px; height: 36px; border-radius: 12px; border: 0; cursor: pointer; display: grid; place-items: center; color: #d6d6de;
+    background: #1f1f24; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .follow {
+    position: relative; height: 36px; min-width: 104px; padding: 0 16px; border-radius: 12px; border: 0; cursor: pointer; overflow: hidden;
+    font: 650 13px/1 ui-sans-serif, -apple-system, "Segoe UI", Inter, Roboto, sans-serif; color: #0b0b0d; background: #f4f4f6;
+    transition: background .35s, color .35s, box-shadow .35s, transform .15s; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .follow:active { transform: scale(.96); }
+  .follow.on { background: #1f1f24; color: #f4f4f6; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .follow svg { width: 0; transition: width .35s cubic-bezier(.3,1.5,.5,1); }
+  .follow.on svg { width: 14px; }
+  .follow svg path { stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .4s .1s; }
+  .follow.on svg path { stroke-dashoffset: 0; }
+  button:focus-visible { outline: 2px solid #7a6bff; outline-offset: 2px; }
+  .name { margin: 12px 0 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; display: flex; align-items: center; gap: 6px; }
+  .badge { width: 19px; height: 19px; flex: none; }
+  .badge .shine { transform: translateX(-30px); }
+  .handle { font-size: 13px; color: #8e8e99; margin-top: 2px; }
+  .bio { font-size: 13px; line-height: 1.45; color: #c8c8d0; margin: 10px 0 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); background: #18181c; border-radius: 14px; padding: 11px 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+  .stat { text-align: center; }
+  .stat + .stat { box-shadow: -1px 0 0 rgba(255,255,255,.06); }
+  .num { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; height: 20px; line-height: 20px; display: inline-flex; overflow: hidden; }
+  .col { display: flex; flex-direction: column; transition: transform .9s cubic-bezier(.2, 1, .3, 1); }
+  .col span { height: 20px; }
+  .lbl { font-size: 11px; color: #7d7d88; margin-top: 2px; }
+  .mut { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 11.5px; color: #8e8e99; }
+  .mut b { color: #c8c8d0; font-weight: 600; }
+  .faces { display: flex; }
+  .faces i { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #131316; margin-left: -6px; }
+  .faces i:first-child { margin-left: 0; background: linear-gradient(135deg, #20d3c2, #1a7cff); }
+  .faces i:nth-child(2) { background: linear-gradient(135deg, #ffcf6b, #ff6f61); }
+  .faces i:nth-child(3) { background: linear-gradient(135deg, #b48cff, #ff7eb3); }
+  .burst { position: absolute; pointer-events: none; width: 5px; height: 5px; border-radius: 50%; }
+</style>
+</head>
+<body>
+  <article class="card" id="card">
+    <div class="cover"></div>
+    <div class="body">
+      <div class="top">
+        <div class="ring"><div class="av" role="img" aria-label="Maya Okafor">MO</div><span class="dot" title="Online"></span></div>
+        <div class="actions">
+          <button class="icon" aria-label="Message"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
+          <button class="follow" id="follow" aria-pressed="false"><svg height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="ftxt">Follow</span></button>
+        </div>
+      </div>
+      <h1 class="name">Maya Okafor
+        <svg class="badge" viewBox="0 0 24 24" aria-label="Verified">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ab0ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient>
+            <linearGradient id="sh" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+            <clipPath id="clip"><path class="seal"/></clipPath>
+          </defs>
+          <path class="seal" fill="url(#bg)"/>
+          <g clip-path="url(#clip)"><rect class="shine" id="shine" x="0" y="-6" width="9" height="36" fill="url(#sh)" transform="rotate(20)"/></g>
+          <path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </h1>
+      <div class="handle">@mayamakes · Design lead, Northwind</div>
+      <p class="bio">Designing calm software. Type nerd, film photographer, and maker of very small tools.</p>
+      <div class="stats">
+        <div class="stat"><div class="num" data-v="248"></div><div class="lbl">Posts</div></div>
+        <div class="stat"><div class="num" id="followers" data-v="18432"></div><div class="lbl">Followers</div></div>
+        <div class="stat"><div class="num" data-v="312"></div><div class="lbl">Following</div></div>
+      </div>
+      <div class="mut"><span class="faces"><i></i><i></i><i></i></span><span>Followed by <b>Theo</b>, <b>Ana</b> + 12 more</span></div>
+    </div>
+  </article>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const btn = document.getElementById('follow'), ftxt = document.getElementById('ftxt');
+  const card = document.getElementById('card'), shine = document.getElementById('shine');
+
+  // scalloped seal path (16 bumps)
+  (function seal() {
+    let d = '';
+    for (let i = 0; i <= 64; i++) {
+      const a = i / 64 * Math.PI * 2, r = 10.6 + Math.cos(a * 16) * 1.1;
+      d += (i ? 'L' : 'M') + (12 + Math.cos(a) * r).toFixed(2) + ' ' + (12 + Math.sin(a) * r).toFixed(2);
+    }
+    document.querySelectorAll('.seal').forEach(p => p.setAttribute('d', d + 'Z'));
+  })();
+
+  // odometer numbers
+  function fmt(n) { return n.toLocaleString('en-US'); }
+  function setNum(el, n, instant) {
+    const s = fmt(n);
+    if (el.dataset.len !== String(s.length)) {
+      el.innerHTML = [...s].map(ch => /\d/.test(ch)
+        ? '<span class="col">' + '0123456789'.split('').map(d => `<span>${d}</span>`).join('') + '</span>'
+        : `<span>${ch}</span>`).join('');
+      el.dataset.len = s.length;
+    }
+    const cols = el.querySelectorAll('.col'); let k = 0;
+    [...s].forEach(ch => {
+      if (!/\d/.test(ch)) return;
+      const c = cols[k++];
+      if (instant) c.style.transition = 'none';
+      c.style.transform = `translateY(${-ch * 20}px)`;
+      if (instant) { c.offsetHeight; c.style.transition = ''; }
+    });
+    el.setAttribute('aria-label', s);
+  }
+  const nums = [...document.querySelectorAll('.num')];
+  nums.forEach(el => setNum(el, +el.dataset.v, true));
+  if (!reduce) {
+    // start every digit at zero then roll in
+    nums.forEach(el => el.querySelectorAll('.col').forEach(c => { c.style.transition = 'none'; c.style.transform = 'translateY(0)'; }));
+    requestAnimationFrame(() => requestAnimationFrame(() => nums.forEach((el, i) => {
+      el.querySelectorAll('.col').forEach((c, j) => { c.style.transition = `transform ${1 + j * .15}s cubic-bezier(.2,1,.3,1) ${i * .08}s`; });
+      setNum(el, +el.dataset.v);
+    })));
+  }
+
+  const followers = document.getElementById('followers');
+  let on = false, auto = !reduce, timer;
+  function burst() {
+    if (reduce) return;
+    const r = btn.getBoundingClientRect(), cr = card.getBoundingClientRect();
+    const colors = ['#ff7eb3', '#ffcf6b', '#20d3c2', '#7a6bff', '#5ab0ff'];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('i'); p.className = 'burst';
+      p.style.background = colors[i % colors.length];
+      p.style.left = (r.left - cr.left + r.width / 2) + 'px'; p.style.top = (r.top - cr.top + r.height / 2) + 'px';
+      card.appendChild(p);
+      const a = Math.random() * Math.PI * 2, d = 30 + Math.random() * 34;
+      p.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(0)`, opacity: 0 }],
+        { duration: 650 + Math.random() * 250, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => p.remove();
+    }
+  }
+  function toggle() {
+    on = !on;
+    btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on);
+    ftxt.textContent = on ? 'Following' : 'Follow';
+    setNum(followers, 18432 + (on ? 1 : 0));
+    if (on) burst();
+  }
+  btn.addEventListener('click', () => { auto = false; clearInterval(timer); toggle(); });
+
+  // badge shine + ring rotation
+  let t0 = performance.now();
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    card.style.setProperty('--a', (t * 50 % 360) + 'deg');
+    const p = (t % 3) / 0.9;            // sweep for 0.9s every 3s
+    shine.setAttribute('transform', `rotate(20) translate(${p < 1 ? -14 + p * 36 : -30} 0)`);
+    requestAnimationFrame(frame);
+  }
+  function fit() { card.style.setProperty('--s', Math.min(1, (innerHeight - 16) / 404, (innerWidth - 24) / 300).toFixed(3)); }
+  addEventListener('resize', fit); fit();
+  if (!reduce) { requestAnimationFrame(frame); timer = setInterval(() => auto && toggle(), 2600); }
+})();
+</script>
+</body>
+</html>
